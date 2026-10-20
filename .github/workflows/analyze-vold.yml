@@ -1,0 +1,191 @@
+name: Analyze vold (SD card encryption)
+
+# Research only, changes nothing in the repo.
+# Downloads stock firmwares one after another, pulls vold and the IVold binder interface out of
+# them and writes a comparison report (job summary + artifact):
+#   - Android / One UI version of each firmware
+#   - does its vold still contain Samsung's SD card encryption (SdCardEncryptionEngine, eCryptfs)?
+#   - IVold transaction list (android.os.IVold$Stub) from framework/services, to see whether a vold
+#     of another device would speak the same binder interface as our S24+ (S926B) based system
+#   - shared libraries vold needs, and whether the S926B system has them
+# The first firmware should be the ROM's source (SM-S926B), it is the reference for the comparison.
+
+on:
+  workflow_dispatch:
+    inputs:
+      firmwares:
+        description: 'Firmwares (MODEL/CSC/IMEI), space separated. First one = reference (our source).'
+        type: string
+        default: 'SM-S926B/EUX/350330051234562 SM-A536B/EUX/350498051234567 SM-A736B/XME/352828291234563'
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v7
+        with:
+          submodules: 'recursive'
+
+      - name: Prepare disk space
+        run: |
+          for d in /usr/share/dotnet /usr/local/lib/android /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache \
+                   /usr/local/share/boost /usr/share/swift /usr/local/share/powershell /opt/microsoft \
+                   /opt/google /usr/local/lib/node_modules /usr/share/miniconda /usr/local/julia*; do
+            sudo rm -rf "$d" &
+          done
+          wait
+          for d in odin fw; do
+            sudo mkdir -p "/mnt/$d" && sudo chown "$USER:$USER" "/mnt/$d"
+            mkdir -p out && ln -sfn "/mnt/$d" "out/$d"
+          done
+          df -h / /mnt
+
+      - name: Set up build environment
+        run: |
+          sudo apt update
+          DEBIAN_FRONTEND=noninteractive sudo apt install -yq \
+            attr ccache clang libbrotli-dev libbz2-dev libgtest-dev libprotobuf-dev libunwind-dev \
+            libpcre2-dev libzstd-dev linux-modules-extra-$(uname -r) lld protobuf-compiler \
+            build-essential python-is-python3 python3 wget curl binutils
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          sudo modprobe erofs f2fs
+          sed -i 's/curl -s --retry 3 -m 3 /curl -s --retry 5 -m 20 /' scripts/utils/firmware_utils.sh
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # same key as the Build workflow, so its tools cache is reused
+      - name: Tools cache key
+        id: toolskey
+        run: echo "key=tools-${{ runner.os }}-$(git submodule status --recursive | sha256sum | cut -c1-16)-${{ hashFiles('external/make.sh', 'scripts/build_dependencies.sh') }}" >> "$GITHUB_OUTPUT"
+
+      - name: Restore tools
+        uses: actions/cache/restore@v4
+        with:
+          path: out/tools
+          key: ${{ steps.toolskey.outputs.key }}
+
+      - name: Build dependencies
+        run: |
+          source "$HOME/.cargo/env"
+          source ./buildenv.sh y2s
+          ./scripts/build_dependencies.sh
+
+      - name: Download, extract and analyze (one firmware at a time)
+        env:
+          FIRMWARES: ${{ inputs.firmwares }}
+        run: |
+          source "$HOME/.cargo/env"
+          source ./buildenv.sh y2s
+          RES="$GITHUB_WORKSPACE/vold-report"
+          mkdir -p "$RES"
+          REF=""
+
+          for FWS in $FIRMWARES; do
+            MODEL=$(cut -d/ -f1 <<< "$FWS"); CSC=$(cut -d/ -f2 <<< "$FWS")
+            NAME="${MODEL}_${CSC}"
+            echo "::group::$NAME"
+            OK=false
+            for try in 1 2 3; do
+              if ./scripts/download_fw.sh --ignore-source --ignore-target "$FWS"; then OK=true; break; fi
+              sleep 30
+            done
+            if ! $OK || ! ./scripts/extract_fw.sh --ignore-source --ignore-target "$FWS"; then
+              echo "$NAME: download/extract FAILED" >> "$RES/failed.txt"
+              rm -rf "$ODIN_DIR/$NAME" "$FW_DIR/$NAME"; echo "::endgroup::"; continue
+            fi
+
+            D="$FW_DIR/$NAME"; O="$RES/$NAME"; mkdir -p "$O"
+            SYS="$D/system/system"; [ -d "$SYS" ] || SYS="$D/system"
+
+            # versions
+            grep -hE '^ro\.(system\.)?build\.(version\.(release|sdk|oneui)|PDA|display\.id|version\.incremental)=' \
+              "$SYS/build.prop" > "$O/version.txt" 2>/dev/null || true
+
+            # vold binary + rc + needed libs
+            cp -a "$SYS/bin/vold" "$O/vold" 2>/dev/null || true
+            cp -a "$SYS/etc/init/vold.rc" "$O/vold.rc" 2>/dev/null || true
+            sha256sum "$O/vold" > "$O/vold.sha256" 2>/dev/null || true
+            readelf -d "$O/vold" 2>/dev/null | grep NEEDED | sed 's/.*\[\(.*\)\]/\1/' | sort > "$O/needed.txt" || true
+            {
+              echo "SdCardEncryptionEngine: $(grep -a -c SdCardEncryptionEngine "$O/vold" 2>/dev/null)"
+              echo "SdCardEncryptionManager: $(grep -a -c SdCardEncryptionManager "$O/vold" 2>/dev/null)"
+              echo "ecryptfs (any case): $(grep -a -c -i ecryptfs "$O/vold" 2>/dev/null)"
+              echo "sde/staging: $(grep -a -c 'sde/staging' "$O/vold" 2>/dev/null)"
+              echo "sec_backup: $(grep -a -c 'sec_backup' "$O/vold" 2>/dev/null)"
+            } > "$O/sdenc.txt"
+            strings -n 6 "$O/vold" | grep -iE 'sdcard|ecrypt|encmeta|sde/' | sort -u > "$O/vold-sd-strings.txt" || true
+
+            # IVold binder interface (Java side, from framework.jar / services.jar)
+            for J in framework services; do
+              [ -f "$SYS/framework/$J.jar" ] || continue
+              rm -rf "$RUNNER_TEMP/dec"
+              java -jar "$TOOLS_DIR/bin/apktool.jar" d -r -f "$SYS/framework/$J.jar" -o "$RUNNER_TEMP/dec" > /dev/null 2>&1 || true
+              F=$(find "$RUNNER_TEMP/dec" -path '*/android/os/IVold$Stub.smali' | head -n 1)
+              if [ -n "$F" ]; then
+                grep -E '\.field static final TRANSACTION_' "$F" \
+                  | sed -E 's/.*TRANSACTION_([A-Za-z0-9_]+):I = (0x[0-9a-f]+)/\2 \1/' \
+                  | while read -r h n; do printf '%d %s\n' "$h" "$n"; done | sort -n > "$O/ivold-$J.txt"
+                cp "$F" "$O/IVold-Stub-$J.smali"
+              fi
+              # SD card encryption hooks in the Java framework
+              grep -rlE 'SdCardEncryption|encryptExternalStorage|EncryptSdCard|sdcard_encryption' "$RUNNER_TEMP/dec" 2>/dev/null \
+                | sed "s#$RUNNER_TEMP/dec/##" | head -50 > "$O/java-sdenc-$J.txt" || true
+            done
+            rm -rf "$RUNNER_TEMP/dec"
+
+            # libs of this vold that the reference system does not have
+            if [ -z "$REF" ]; then
+              REF="$O"
+              find "$SYS/lib64" "$SYS/apex" -name '*.so' 2>/dev/null | xargs -n1 basename | sort -u > "$RES/ref-libs.txt"
+            fi
+            comm -23 "$O/needed.txt" "$RES/ref-libs.txt" > "$O/needed-missing-in-ref.txt" || true
+
+            echo "::endgroup::"
+            rm -rf "$ODIN_DIR/$NAME" "$FW_DIR/$NAME"
+            df -h /mnt | tail -n 1
+          done
+
+          # ---- report ----
+          {
+            echo "# vold / SD card encryption analysis"
+            [ -f "$RES/failed.txt" ] && { echo; echo '```'; cat "$RES/failed.txt"; echo '```'; }
+            for O in "$RES"/*/; do
+              N=$(basename "$O")
+              echo; echo "## $N"
+              echo '```'; cat "$O/version.txt" 2>/dev/null; echo '```'
+              echo '```'; cat "$O/sdenc.txt" 2>/dev/null; echo '```'
+              echo "IVold transactions: framework=$(wc -l < "$O/ivold-framework.txt" 2>/dev/null || echo -) services=$(wc -l < "$O/ivold-services.txt" 2>/dev/null || echo -)"
+              if [ -n "$REF" ] && [ "$O" != "$REF/" ]; then
+                for J in framework services; do
+                  [ -f "$O/ivold-$J.txt" ] && [ -f "$REF/ivold-$J.txt" ] || continue
+                  if diff -q "$REF/ivold-$J.txt" "$O/ivold-$J.txt" > /dev/null; then
+                    echo; echo "**IVold ($J) identical to the reference**"
+                  else
+                    echo; echo "**IVold ($J) differs from the reference:**"
+                    echo '```diff'; diff "$REF/ivold-$J.txt" "$O/ivold-$J.txt" | head -80; echo '```'
+                  fi
+                done
+                echo; echo "Libraries this vold needs that the reference system lacks:"
+                echo '```'; cat "$O/needed-missing-in-ref.txt" 2>/dev/null; echo '```'
+              fi
+            done
+          } > "$RES/REPORT.md"
+          cat "$RES/REPORT.md" >> "$GITHUB_STEP_SUMMARY"
+          cat "$RES/REPORT.md"
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vold-report
+          path: vold-report
+          retention-days: 14
