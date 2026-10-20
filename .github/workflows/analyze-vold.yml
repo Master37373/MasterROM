@@ -11,6 +11,11 @@ name: Analyze vold (SD card encryption)
 # The first firmware should be the ROM's source (SM-S926B), it is the reference for the comparison.
 
 on:
+  # a new workflow can only be started by name once it exists on the default branch (main);
+  # until then it runs when this file is pushed to sixteen-qpr2
+  push:
+    branches: [sixteen-qpr2]
+    paths: ['.github/workflows/analyze-vold.yml']
   workflow_dispatch:
     inputs:
       firmwares:
@@ -81,7 +86,7 @@ jobs:
 
       - name: Download, extract and analyze (one firmware at a time)
         env:
-          FIRMWARES: ${{ inputs.firmwares }}
+          FIRMWARES: ${{ inputs.firmwares || 'SM-S926B/EUX/350330051234562 SM-A536B/EUX/350498051234567 SM-A736B/XME/352828291234563' }}
         run: |
           source "$HOME/.cargo/env"
           source ./buildenv.sh y2s
