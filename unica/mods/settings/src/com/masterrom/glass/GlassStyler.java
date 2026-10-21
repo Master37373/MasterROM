@@ -68,7 +68,8 @@ public final class GlassStyler {
             }
             callQuiet(list, "seslSetFillBottomEnabled", new Class[] { boolean.class }, false);
             // Samsung paints the list's side padding (28px each side) in the old page grey
-            callQuiet(list, "seslSetFillHorizontalPaddingEnabled", new Class[] { boolean.class }, false);
+            noSidePaddingFill(list);
+            diagnose(list);
             callQuiet(list, "seslSetFadingEdgeEnabled", new Class[] { boolean.class }, false);
 
             // 3) everything between the list and the window is made transparent
@@ -91,6 +92,7 @@ public final class GlassStyler {
                 list.setTag(KEY, Boolean.TRUE);
                 list.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
                     @Override public boolean onPreDraw() {
+                        noSidePaddingFill(l);
                         styleChildren(l, dk, dd);
                         return true;
                     }
@@ -156,10 +158,74 @@ public final class GlassStyler {
         if (!(row instanceof ViewGroup) || ((ViewGroup) row).getChildCount() == 0) return;
         View link = ((ViewGroup) row).getChildAt(0);
         if (!link.getClass().getName().endsWith("RelativeLinkView")) return;
-        if (link.getBackground() != null) link.setBackground(null);
-        int id = link.getResources().getIdentifier("relative_link_container", "id", link.getContext().getPackageName());
-        View box = id == 0 ? null : link.findViewById(id);
-        if (box != null && box.getBackground() != null) box.setBackground(null);
+        clearGroupFills(link);
+    }
+
+    /** Removes the fill of a view group and of all view groups inside it (texts keep their ripple). */
+    private static void clearGroupFills(View v) {
+        if (!(v instanceof ViewGroup)) return;
+        if (v.getBackground() != null) v.setBackground(null);
+        ViewGroup g = (ViewGroup) v;
+        for (int i = 0; i < g.getChildCount(); i++) clearGroupFills(g.getChildAt(i));
+    }
+
+    // ---- side padding fill ----
+
+    private static Method sFillMethod;
+    private static boolean sFillLooked;
+
+    /** Samsung fills the list's side padding (28px) in the old page grey: switch that off. */
+    static void noSidePaddingFill(ViewGroup list) {
+        if (!sFillLooked) {
+            sFillLooked = true;
+            sFillMethod = find(list.getClass(), "seslSetFillHorizontalPaddingEnabled", new Class[] { boolean.class });
+        }
+        if (sFillMethod == null) return;
+        try {
+            sFillMethod.invoke(list, false);
+        } catch (Throwable t) {
+            Log.i(TAG, "fill: " + t);
+        }
+    }
+
+    // ---- diagnostics (once per list) ----
+
+    private static void diagnose(ViewGroup list) {
+        if (list.getTag(KEY + 2) != null) return;
+        list.setTag(KEY + 2, Boolean.TRUE);
+        try {
+            StringBuilder sb = new StringBuilder("diag list=").append(list.getClass().getName())
+                    .append(" fillMethod=").append(sFillMethod != null)
+                    .append(" pad=").append(list.getPaddingLeft()).append('/').append(list.getPaddingRight())
+                    .append(" bg=").append(name(list.getBackground()));
+            Object n = call(list, "getItemDecorationCount");
+            int count = n instanceof Integer ? (Integer) n : 0;
+            for (int i = 0; i < count; i++) {
+                Method m = find(list.getClass(), "getItemDecorationAt", new Class[] { int.class });
+                Object d = m == null ? null : m.invoke(list, i);
+                sb.append(" deco").append(i).append('=').append(d == null ? "null" : d.getClass().getName());
+            }
+            Log.i(TAG, sb.toString());
+            for (ViewParent p = list.getParent(); p instanceof View; p = p.getParent()) {
+                View v = (View) p;
+                Log.i(TAG, "diag parent " + v.getClass().getName() + " id=" + idName(v) + " bg=" + name(v.getBackground())
+                        + " fg=" + name(v.getForeground()) + " " + v.getLeft() + "," + v.getTop() + "-" + v.getRight() + "," + v.getBottom());
+            }
+        } catch (Throwable t) {
+            Log.i(TAG, "diag: " + t);
+        }
+    }
+
+    private static String name(Object o) {
+        return o == null ? "null" : o.getClass().getSimpleName();
+    }
+
+    private static String idName(View v) {
+        try {
+            return v.getId() == View.NO_ID ? "-" : v.getResources().getResourceEntryName(v.getId());
+        } catch (Throwable t) {
+            return "?";
+        }
     }
 
     /** Press ripple without a fill, so the glass card behind the row stays visible. */
