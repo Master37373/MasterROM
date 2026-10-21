@@ -34,7 +34,7 @@
         }
     .end annotation
 
-    .line 92
+    .line 93
     iput-object p1, p0, Lcom/masterrom/glass/GlassStyler$1;->val$l:Landroid/view/ViewGroup;
 
     iput-boolean p2, p0, Lcom/masterrom/glass/GlassStyler$1;->val$dk:Z
@@ -51,7 +51,12 @@
 .method public onPreDraw()Z
     .locals 2
 
-    .line 94
+    .line 95
+    iget-object v0, p0, Lcom/masterrom/glass/GlassStyler$1;->val$l:Landroid/view/ViewGroup;
+
+    invoke-static {v0}, Lcom/masterrom/glass/GlassStyler;->noSidePaddingFill(Landroid/view/ViewGroup;)V
+
+    .line 96
     iget-object v0, p0, Lcom/masterrom/glass/GlassStyler$1;->val$l:Landroid/view/ViewGroup;
 
     iget-boolean v1, p0, Lcom/masterrom/glass/GlassStyler$1;->val$dk:Z

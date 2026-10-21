@@ -24,10 +24,10 @@
 .method constructor <init>(Z)V
     .locals 2
 
-    .line 242
+    .line 308
     invoke-direct {p0}, Landroid/graphics/drawable/Drawable;-><init>()V
 
-    .line 240
+    .line 306
     new-instance v0, Landroid/graphics/Paint;
 
     const/4 v1, 0x1
@@ -36,7 +36,7 @@
 
     iput-object v0, p0, Lcom/masterrom/glass/GlassStyler$PageDrawable;->paint:Landroid/graphics/Paint;
 
-    .line 242
+    .line 308
     iput-boolean p1, p0, Lcom/masterrom/glass/GlassStyler$PageDrawable;->dark:Z
 
     return-void
@@ -45,7 +45,7 @@
 .method private spot(Landroid/graphics/Canvas;FFFI)V
     .locals 9
 
-    .line 254
+    .line 320
     iget-object v0, p0, Lcom/masterrom/glass/GlassStyler$PageDrawable;->paint:Landroid/graphics/Paint;
 
     new-instance v8, Landroid/graphics/RadialGradient;
@@ -74,7 +74,7 @@
 
     invoke-virtual {v0, v8}, Landroid/graphics/Paint;->setShader(Landroid/graphics/Shader;)Landroid/graphics/Shader;
 
-    .line 255
+    .line 321
     iget-object p0, p0, Lcom/masterrom/glass/GlassStyler$PageDrawable;->paint:Landroid/graphics/Paint;
 
     invoke-virtual {p1, p2, p3, p4, p0}, Landroid/graphics/Canvas;->drawCircle(FFFLandroid/graphics/Paint;)V
@@ -87,12 +87,12 @@
 .method public draw(Landroid/graphics/Canvas;)V
     .locals 9
 
-    .line 245
+    .line 311
     invoke-virtual {p0}, Lcom/masterrom/glass/GlassStyler$PageDrawable;->getBounds()Landroid/graphics/Rect;
 
     move-result-object v0
 
-    .line 246
+    .line 312
     invoke-virtual {v0}, Landroid/graphics/Rect;->width()I
 
     move-result v1
@@ -105,7 +105,7 @@
 
     int-to-float v0, v0
 
-    .line 247
+    .line 313
     iget-boolean v2, p0, Lcom/masterrom/glass/GlassStyler$PageDrawable;->dark:Z
 
     if-eqz v2, :cond_0
@@ -132,7 +132,7 @@
 
     mul-float v7, v1, v2
 
-    .line 248
+    .line 314
     iget-boolean v2, p0, Lcom/masterrom/glass/GlassStyler$PageDrawable;->dark:Z
 
     if-eqz v2, :cond_1
@@ -165,7 +165,7 @@
 
     mul-float v7, v1, v2
 
-    .line 249
+    .line 315
     iget-boolean v2, p0, Lcom/masterrom/glass/GlassStyler$PageDrawable;->dark:Z
 
     if-eqz v2, :cond_2
@@ -198,7 +198,7 @@
 
     mul-float v7, v1, v0
 
-    .line 250
+    .line 316
     iget-boolean v0, p0, Lcom/masterrom/glass/GlassStyler$PageDrawable;->dark:Z
 
     if-eqz v0, :cond_3

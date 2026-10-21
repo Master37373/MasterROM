@@ -22,7 +22,7 @@
 .method constructor <init>(F)V
     .locals 0
 
-    .line 137
+    .line 139
     iput p1, p0, Lcom/masterrom/glass/GlassStyler$2;->val$r:F
 
     invoke-direct {p0}, Landroid/view/ViewOutlineProvider;-><init>()V
@@ -35,7 +35,7 @@
 .method public getOutline(Landroid/view/View;Landroid/graphics/Outline;)V
     .locals 6
 
-    .line 139
+    .line 141
     invoke-virtual {p1}, Landroid/view/View;->getWidth()I
 
     move-result v3
