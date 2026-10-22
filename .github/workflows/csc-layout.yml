@@ -1,0 +1,92 @@
+name: Extract source CSC home layout
+
+# Downloads the source firmware (SOURCE_FIRMWARE from unica/configs/essi.sh, the S24+),
+# pulls prism out of its CSC package and uploads the home screen layouts
+# (default_workspace*.xml) as an artifact. Nothing in the repo is changed.
+
+on:
+  workflow_dispatch:
+    inputs:
+      sales_code:
+        description: 'CSC sales code whose layout should be extracted'
+        default: DBT
+
+permissions:
+  contents: read
+
+jobs:
+  extract:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v7
+
+      - name: Use /mnt for the firmware download
+        run: |
+          sudo mkdir -p /mnt/odin && sudo chown "$USER:$USER" /mnt/odin
+          mkdir -p out/tools/bin && ln -sfn /mnt/odin out/odin
+          df -h /mnt
+
+      - name: Build samloader
+        run: |
+          git submodule update --init --depth 1 external/samloader-rs
+          cd external/samloader-rs
+          cargo build --locked --release --package samloader
+          cp -a target/release/samloader "$GITHUB_WORKSPACE/out/tools/bin/"
+
+      - name: Download source firmware
+        uses: nick-fields/retry@v4
+        with:
+          timeout_minutes: 60
+          max_attempts: 3
+          retry_on: error
+          command: |
+            sed -i 's/curl -s --retry 3 -m 3 /curl -s --retry 5 -m 20 /' scripts/utils/firmware_utils.sh
+            source ./buildenv.sh y2s && ./scripts/download_fw.sh --ignore-target
+
+      - name: Extract prism from the CSC package
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -yq lz4 android-sdk-libsparse-utils file
+          CSC_TAR="$(find out/odin/ -name 'CSC_*.tar.md5' | head -n 1)"
+          echo "CSC package: $CSC_TAR"
+          [ -n "$CSC_TAR" ] || { echo "No CSC_*.tar.md5 found"; ls -R out/odin/; exit 1; }
+          mkdir -p /mnt/csc && cd /mnt/csc
+          tar -tf "$GITHUB_WORKSPACE/$CSC_TAR"
+          tar -xf "$GITHUB_WORKSPACE/$CSC_TAR" prism.img.lz4
+          lz4 -d -f prism.img.lz4 prism.img && rm -f prism.img.lz4
+          if file prism.img | grep -qi "sparse"; then
+            simg2img prism.img prism_raw.img && mv -f prism_raw.img prism.img
+          fi
+          file prism.img
+          ls -l prism.img
+
+      - name: Copy home screen layouts
+        run: |
+          sudo modprobe erofs || true
+          mkdir -p /mnt/csc/mnt result
+          sudo mount -o loop,ro /mnt/csc/prism.img /mnt/csc/mnt
+          SALES="${{ inputs.sales_code }}"
+          {
+            echo "prism image: $(file -b /mnt/csc/prism.img)"
+            echo "prism size: $(stat -c %s /mnt/csc/prism.img) bytes"
+            echo
+            echo "All home layouts in prism:"
+            find /mnt/csc/mnt -iname '*workspace*' | sed 's|/mnt/csc/mnt||'
+          } > result/info.txt
+          for d in "etc/carriers/$SALES" "etc/carriers/single/$SALES"; do
+            if [ -d "/mnt/csc/mnt/$d" ]; then
+              mkdir -p "result/$d"
+              cp -a /mnt/csc/mnt/$d/*workspace* "result/$d/" 2>/dev/null || true
+            fi
+          done
+          sudo umount /mnt/csc/mnt
+          cat result/info.txt
+          find result -type f
+
+      - name: Upload layouts
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-csc-layout-${{ inputs.sales_code }}
+          path: result/
