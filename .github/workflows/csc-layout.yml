@@ -52,7 +52,7 @@ jobs:
             out/tools/bin/samloader download --model "$MODEL" --region "$REGION" \
               --version "$SOURCE_FIRMWARE_VERSION" --out-dir out/odin/fw
             ls -l out/odin/fw
-            (cd out/odin/fw && unzip -o -q ./*.zip 'CSC_*' && rm -f ./*.zip)
+            (cd out/odin/fw && unzip -o -q ./*.zip 'CSC_*' 'AP_*' && rm -f ./*.zip)
             ls -l out/odin/fw
 
       - name: Extract prism from the CSC package
@@ -95,6 +95,41 @@ jobs:
           sudo chown -R "$USER:$USER" result
           cat result/info.txt
           find result -type f
+
+      - name: List preinstalled apps (system, product, preload)
+        run: |
+          sudo apt-get install -yq aapt android-sdk-libsparse-utils erofs-utils "linux-modules-extra-$(uname -r)" >/dev/null
+          sudo modprobe erofs || true
+          AP_TAR="$(find out/odin/ -name 'AP_*.tar.md5' | head -n 1)"
+          echo "AP package: $AP_TAR"
+          mkdir -p /mnt/csc/ap && cd /mnt/csc/ap
+          tar -xf "$GITHUB_WORKSPACE/$AP_TAR" super.img.lz4
+          lz4 -d -f super.img.lz4 super.img && rm -f super.img.lz4
+          if file super.img | grep -qi sparse; then simg2img super.img super_raw.img && mv -f super_raw.img super.img; fi
+          curl -sSfL -o lpunpack.py https://raw.githubusercontent.com/unix3dgforce/lpunpack/master/lpunpack.py
+          mkdir -p parts
+          python3 lpunpack.py -p system,product super.img parts
+          rm -f super.img
+          ls -l parts
+          OUT="$GITHUB_WORKSPACE/result/apps.txt"
+          : > "$OUT"
+          for P in system product; do
+            IMG="$(ls parts/${P}.img parts/${P}_a.img 2>/dev/null | head -n 1)"
+            [ -n "$IMG" ] || continue
+            sudo mkdir -p "m_$P" && sudo mount -o loop,ro "$IMG" "m_$P"
+            # system.img has the real tree under system/
+            ROOT="m_$P"; [ -d "m_$P/system/app" ] && ROOT="m_$P/system"
+            for D in app priv-app preload; do
+              sudo test -d "$ROOT/$D" || continue
+              sudo find "$ROOT/$D" -name '*.apk' | sort | while read -r A; do
+                PKG="$(sudo aapt dump badging "$A" 2>/dev/null | sed -n "s/^package: name='\([^']*\)'.*/\1/p")"
+                echo "$P/$D  ${A#$ROOT/$D/}  $PKG" >> "$OUT"
+              done
+            done
+            sudo umount "m_$P"
+          done
+          wc -l "$OUT"
+          grep -iE "spage|skydrive|office|outlook|linkedin|bard|messaging|gamehome|samsungapps|tachyon|videos" "$OUT" || true
 
       - name: Upload layouts
         uses: actions/upload-artifact@v4
