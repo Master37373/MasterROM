@@ -1,0 +1,4 @@
+id=system_volume_curve
+name=System sound volume curve
+author=MasterROM
+description=Steeper speaker volume curve for system sounds, so the lowest steps are actually quiet.

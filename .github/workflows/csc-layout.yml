@@ -24,7 +24,7 @@ jobs:
 
       - name: Use /mnt for the firmware download
         run: |
-          sudo mkdir -p /mnt/odin && sudo chown "$USER:$USER" /mnt/odin
+          sudo mkdir -p /mnt/odin /mnt/csc/mnt && sudo chown -R "$USER:$USER" /mnt/odin /mnt/csc
           mkdir -p out/tools/bin && ln -sfn /mnt/odin out/odin
           df -h /mnt
 
@@ -75,7 +75,7 @@ jobs:
       - name: Copy home screen layouts
         run: |
           sudo modprobe erofs || true
-          mkdir -p /mnt/csc/mnt result
+          mkdir -p result
           sudo mount -o loop,ro /mnt/csc/prism.img /mnt/csc/mnt
           SALES="${{ inputs.sales_code }}"
           {
@@ -83,15 +83,16 @@ jobs:
             echo "prism size: $(stat -c %s /mnt/csc/prism.img) bytes"
             echo
             echo "All home layouts in prism:"
-            find /mnt/csc/mnt -iname '*workspace*' | sed 's|/mnt/csc/mnt||'
+            sudo find /mnt/csc/mnt -iname '*workspace*' | sed 's|/mnt/csc/mnt||'
           } > result/info.txt
           for d in "etc/carriers/$SALES" "etc/carriers/single/$SALES"; do
-            if [ -d "/mnt/csc/mnt/$d" ]; then
+            if sudo test -d "/mnt/csc/mnt/$d"; then
               mkdir -p "result/$d"
-              cp -a /mnt/csc/mnt/$d/*workspace* "result/$d/" 2>/dev/null || true
+              sudo sh -c "cp /mnt/csc/mnt/$d/*workspace* 'result/$d/'" || true
             fi
           done
           sudo umount /mnt/csc/mnt
+          sudo chown -R "$USER:$USER" result
           cat result/info.txt
           find result -type f
 
