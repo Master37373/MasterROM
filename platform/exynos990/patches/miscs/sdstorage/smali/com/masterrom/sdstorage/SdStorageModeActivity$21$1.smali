@@ -1,4 +1,4 @@
-.class Lcom/masterrom/sdstorage/SdStorageModeActivity$20$1;
+.class Lcom/masterrom/sdstorage/SdStorageModeActivity$21$1;
 .super Ljava/lang/Object;
 .source "SdStorageModeActivity.java"
 
@@ -8,7 +8,7 @@
 
 # annotations
 .annotation system Ldalvik/annotation/EnclosingMethod;
-    value = Lcom/masterrom/sdstorage/SdStorageModeActivity$20;->onClick(Landroid/view/View;)V
+    value = Lcom/masterrom/sdstorage/SdStorageModeActivity$21;->onClick(Landroid/view/View;)V
 .end annotation
 
 .annotation system Ldalvik/annotation/InnerClass;
@@ -18,15 +18,15 @@
 
 
 # instance fields
-.field final synthetic this$1:Lcom/masterrom/sdstorage/SdStorageModeActivity$20;
+.field final synthetic this$1:Lcom/masterrom/sdstorage/SdStorageModeActivity$21;
 
 
 # direct methods
-.method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity$20;)V
+.method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity$21;)V
     .locals 0
 
-    .line 943
-    iput-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$20$1;->this$1:Lcom/masterrom/sdstorage/SdStorageModeActivity$20;
+    .line 974
+    iput-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$21$1;->this$1:Lcom/masterrom/sdstorage/SdStorageModeActivity$21;
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
@@ -38,14 +38,14 @@
 .method public onAnimationUpdate(Landroid/animation/ValueAnimator;)V
     .locals 2
 
-    .line 944
-    iget-object v0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$20$1;->this$1:Lcom/masterrom/sdstorage/SdStorageModeActivity$20;
+    .line 975
+    iget-object v0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$21$1;->this$1:Lcom/masterrom/sdstorage/SdStorageModeActivity$21;
 
-    iget-object v0, v0, Lcom/masterrom/sdstorage/SdStorageModeActivity$20;->val$bg:Landroid/graphics/drawable/GradientDrawable;
+    iget-object v0, v0, Lcom/masterrom/sdstorage/SdStorageModeActivity$21;->val$bg:Landroid/graphics/drawable/GradientDrawable;
 
-    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$20$1;->this$1:Lcom/masterrom/sdstorage/SdStorageModeActivity$20;
+    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$21$1;->this$1:Lcom/masterrom/sdstorage/SdStorageModeActivity$21;
 
-    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$20;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
+    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$21;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
     const/high16 v1, 0x40000000    # 2.0f
 

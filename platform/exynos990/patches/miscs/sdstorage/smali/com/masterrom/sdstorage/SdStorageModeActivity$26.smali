@@ -20,22 +20,13 @@
 # instance fields
 .field final synthetic this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-.field final synthetic val$target:Landroid/os/storage/VolumeInfo;
-
 
 # direct methods
-.method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity;Landroid/os/storage/VolumeInfo;)V
+.method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity;)V
     .locals 0
-    .annotation system Ldalvik/annotation/Signature;
-        value = {
-            "()V"
-        }
-    .end annotation
 
-    .line 1152
+    .line 1180
     iput-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$26;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
-
-    iput-object p2, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$26;->val$target:Landroid/os/storage/VolumeInfo;
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
@@ -45,16 +36,12 @@
 
 # virtual methods
 .method public onClick(Landroid/view/View;)V
-    .locals 1
+    .locals 0
 
-    .line 1154
-    iget-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$26;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
+    .line 1181
+    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$26;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-    new-instance v0, Lcom/masterrom/sdstorage/SdStorageModeActivity$26$1;
-
-    invoke-direct {v0, p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity$26$1;-><init>(Lcom/masterrom/sdstorage/SdStorageModeActivity$26;)V
-
-    invoke-static {p1, v0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$4100(Lcom/masterrom/sdstorage/SdStorageModeActivity;Ljava/lang/Runnable;)V
+    invoke-static {p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$2300(Lcom/masterrom/sdstorage/SdStorageModeActivity;)V
 
     return-void
 .end method

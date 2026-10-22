@@ -8,7 +8,7 @@
 
 # annotations
 .annotation system Ldalvik/annotation/EnclosingMethod;
-    value = Lcom/masterrom/sdstorage/SdStorageModeActivity;->runWork(Ljava/lang/String;Lcom/masterrom/sdstorage/SdStorageModeActivity$Work;Ljava/lang/String;Ljava/lang/Runnable;)V
+    value = Lcom/masterrom/sdstorage/SdStorageModeActivity;->toPortable(Landroid/os/storage/DiskInfo;Landroid/os/storage/VolumeInfo;)V
 .end annotation
 
 .annotation system Ldalvik/annotation/InnerClass;
@@ -20,15 +20,13 @@
 # instance fields
 .field final synthetic this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-.field final synthetic val$next:Ljava/lang/Runnable;
+.field final synthetic val$doIt:Ljava/lang/Runnable;
 
-.field final synthetic val$okMessage:Ljava/lang/String;
-
-.field final synthetic val$work:Lcom/masterrom/sdstorage/SdStorageModeActivity$Work;
+.field final synthetic val$primaryOnSd:Z
 
 
 # direct methods
-.method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity;Lcom/masterrom/sdstorage/SdStorageModeActivity$Work;Ljava/lang/Runnable;Ljava/lang/String;)V
+.method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity;ZLjava/lang/Runnable;)V
     .locals 0
     .annotation system Ldalvik/annotation/Signature;
         value = {
@@ -36,14 +34,12 @@
         }
     .end annotation
 
-    .line 1391
+    .line 1306
     iput-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$33;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-    iput-object p2, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$33;->val$work:Lcom/masterrom/sdstorage/SdStorageModeActivity$Work;
+    iput-boolean p2, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$33;->val$primaryOnSd:Z
 
-    iput-object p3, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$33;->val$next:Ljava/lang/Runnable;
-
-    iput-object p4, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$33;->val$okMessage:Ljava/lang/String;
+    iput-object p3, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$33;->val$doIt:Ljava/lang/Runnable;
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
@@ -53,59 +49,26 @@
 
 # virtual methods
 .method public run()V
-    .locals 3
+    .locals 1
 
-    .line 1394
-    :try_start_0
-    iget-object v0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$33;->val$work:Lcom/masterrom/sdstorage/SdStorageModeActivity$Work;
+    .line 1307
+    iget-boolean v0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$33;->val$primaryOnSd:Z
 
-    invoke-interface {v0}, Lcom/masterrom/sdstorage/SdStorageModeActivity$Work;->run()Ljava/lang/String;
+    if-eqz v0, :cond_0
 
-    move-result-object v0
-    :try_end_0
-    .catchall {:try_start_0 .. :try_end_0} :catchall_0
+    iget-object v0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$33;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
+
+    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$33;->val$doIt:Ljava/lang/Runnable;
+
+    invoke-static {v0, p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$4100(Lcom/masterrom/sdstorage/SdStorageModeActivity;Ljava/lang/Runnable;)V
 
     goto :goto_0
 
-    :catchall_0
-    move-exception v0
-
-    .line 1396
-    const-string v1, "MasterROMSdStorage"
-
-    const-string v2, "SD storage mode switch failed"
-
-    invoke-static {v1, v2, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;Ljava/lang/Throwable;)I
-
-    .line 1397
-    invoke-virtual {v0}, Ljava/lang/Throwable;->getMessage()Ljava/lang/String;
-
-    move-result-object v1
-
-    if-eqz v1, :cond_0
-
-    invoke-virtual {v0}, Ljava/lang/Throwable;->getMessage()Ljava/lang/String;
-
-    move-result-object v0
-
     :cond_0
-    invoke-static {v0}, Ljava/lang/String;->valueOf(Ljava/lang/Object;)Ljava/lang/String;
+    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$33;->val$doIt:Ljava/lang/Runnable;
 
-    move-result-object v0
+    invoke-interface {p0}, Ljava/lang/Runnable;->run()V
 
-    .line 1400
     :goto_0
-    iget-object v1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$33;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
-
-    invoke-static {v1}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$3200(Lcom/masterrom/sdstorage/SdStorageModeActivity;)Landroid/os/Handler;
-
-    move-result-object v1
-
-    new-instance v2, Lcom/masterrom/sdstorage/SdStorageModeActivity$33$1;
-
-    invoke-direct {v2, p0, v0}, Lcom/masterrom/sdstorage/SdStorageModeActivity$33$1;-><init>(Lcom/masterrom/sdstorage/SdStorageModeActivity$33;Ljava/lang/String;)V
-
-    invoke-virtual {v1, v2}, Landroid/os/Handler;->post(Ljava/lang/Runnable;)Z
-
     return-void
 .end method

@@ -3,12 +3,12 @@
 .source "SdStorageModeActivity.java"
 
 # interfaces
-.implements Landroid/view/View$OnTouchListener;
+.implements Lcom/masterrom/sdstorage/SdStorageModeActivity$Work;
 
 
 # annotations
 .annotation system Ldalvik/annotation/EnclosingMethod;
-    value = Lcom/masterrom/sdstorage/SdStorageModeActivity;->addPress(Landroid/view/View;)V
+    value = Lcom/masterrom/sdstorage/SdStorageModeActivity;->resumeMove(Landroid/content/Intent;)Z
 .end annotation
 
 .annotation system Ldalvik/annotation/InnerClass;
@@ -20,13 +20,22 @@
 # instance fields
 .field final synthetic this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
+.field final synthetic val$moveId:I
+
 
 # direct methods
-.method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity;)V
+.method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity;I)V
     .locals 0
+    .annotation system Ldalvik/annotation/Signature;
+        value = {
+            "()V"
+        }
+    .end annotation
 
-    .line 316
+    .line 230
     iput-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$4;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
+
+    iput p2, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$4;->val$moveId:I
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
@@ -35,98 +44,35 @@
 
 
 # virtual methods
-.method public onTouch(Landroid/view/View;Landroid/view/MotionEvent;)Z
-    .locals 2
+.method public run()Ljava/lang/String;
+    .locals 3
+    .annotation system Ldalvik/annotation/Throws;
+        value = {
+            Ljava/lang/Exception;
+        }
+    .end annotation
 
-    .line 318
-    invoke-virtual {p2}, Landroid/view/MotionEvent;->getActionMasked()I
+    .line 232
+    iget-object v0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$4;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-    move-result p2
+    const-string v1, "Fotos, Downloads und andere Dateien werden verschoben \u2026"
 
-    if-eqz p2, :cond_1
+    const-string v2, "Photos, downloads and other files are being moved \u2026"
 
-    const/4 v0, 0x1
+    invoke-static {v0, v1, v2}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$300(Lcom/masterrom/sdstorage/SdStorageModeActivity;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 
-    if-eq p2, v0, :cond_0
+    move-result-object v1
 
-    const/4 v0, 0x3
+    invoke-static {v0, v1}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$400(Lcom/masterrom/sdstorage/SdStorageModeActivity;Ljava/lang/String;)V
 
-    if-eq p2, v0, :cond_0
+    .line 234
+    iget-object v0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$4;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-    goto :goto_0
+    iget p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$4;->val$moveId:I
 
-    .line 324
-    :cond_0
-    invoke-virtual {p1}, Landroid/view/View;->animate()Landroid/view/ViewPropertyAnimator;
-
-    move-result-object p1
-
-    const/high16 p2, 0x3f800000    # 1.0f
-
-    invoke-virtual {p1, p2}, Landroid/view/ViewPropertyAnimator;->scaleX(F)Landroid/view/ViewPropertyAnimator;
-
-    move-result-object p1
-
-    invoke-virtual {p1, p2}, Landroid/view/ViewPropertyAnimator;->scaleY(F)Landroid/view/ViewPropertyAnimator;
-
-    move-result-object p1
-
-    const-wide/16 v0, 0x140
-
-    invoke-virtual {p1, v0, v1}, Landroid/view/ViewPropertyAnimator;->setDuration(J)Landroid/view/ViewPropertyAnimator;
-
-    move-result-object p1
-
-    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$4;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
-
-    invoke-static {p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$600(Lcom/masterrom/sdstorage/SdStorageModeActivity;)Landroid/view/animation/PathInterpolator;
+    invoke-static {v0, p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$500(Lcom/masterrom/sdstorage/SdStorageModeActivity;I)Ljava/lang/String;
 
     move-result-object p0
 
-    invoke-virtual {p1, p0}, Landroid/view/ViewPropertyAnimator;->setInterpolator(Landroid/animation/TimeInterpolator;)Landroid/view/ViewPropertyAnimator;
-
-    move-result-object p0
-
-    invoke-virtual {p0}, Landroid/view/ViewPropertyAnimator;->start()V
-
-    goto :goto_0
-
-    .line 320
-    :cond_1
-    invoke-virtual {p1}, Landroid/view/View;->animate()Landroid/view/ViewPropertyAnimator;
-
-    move-result-object p1
-
-    const p2, 0x3f75c28f    # 0.96f
-
-    invoke-virtual {p1, p2}, Landroid/view/ViewPropertyAnimator;->scaleX(F)Landroid/view/ViewPropertyAnimator;
-
-    move-result-object p1
-
-    invoke-virtual {p1, p2}, Landroid/view/ViewPropertyAnimator;->scaleY(F)Landroid/view/ViewPropertyAnimator;
-
-    move-result-object p1
-
-    const-wide/16 v0, 0x6e
-
-    invoke-virtual {p1, v0, v1}, Landroid/view/ViewPropertyAnimator;->setDuration(J)Landroid/view/ViewPropertyAnimator;
-
-    move-result-object p1
-
-    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$4;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
-
-    invoke-static {p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$500(Lcom/masterrom/sdstorage/SdStorageModeActivity;)Landroid/view/animation/PathInterpolator;
-
-    move-result-object p0
-
-    invoke-virtual {p1, p0}, Landroid/view/ViewPropertyAnimator;->setInterpolator(Landroid/animation/TimeInterpolator;)Landroid/view/ViewPropertyAnimator;
-
-    move-result-object p0
-
-    invoke-virtual {p0}, Landroid/view/ViewPropertyAnimator;->start()V
-
-    :goto_0
-    const/4 p0, 0x0
-
-    return p0
+    return-object p0
 .end method

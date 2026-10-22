@@ -3,7 +3,7 @@
 .source "SdStorageModeActivity.java"
 
 # interfaces
-.implements Landroid/view/View$OnApplyWindowInsetsListener;
+.implements Landroid/view/View$OnLayoutChangeListener;
 
 
 # annotations
@@ -25,7 +25,7 @@
 .method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity;)V
     .locals 0
 
-    .line 454
+    .line 472
     iput-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$10;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
@@ -35,43 +35,21 @@
 
 
 # virtual methods
-.method public onApplyWindowInsets(Landroid/view/View;Landroid/view/WindowInsets;)Landroid/view/WindowInsets;
-    .locals 2
+.method public onLayoutChange(Landroid/view/View;IIIIIIII)V
+    .locals 0
 
-    .line 456
-    invoke-static {}, Landroid/view/WindowInsets$Type;->systemBars()I
+    .line 474
+    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$10;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-    move-result p1
-
-    invoke-static {}, Landroid/view/WindowInsets$Type;->displayCutout()I
-
-    move-result v0
-
-    or-int/2addr p1, v0
-
-    invoke-virtual {p2, p1}, Landroid/view/WindowInsets;->getInsets(I)Landroid/graphics/Insets;
+    invoke-static {p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$1100(Lcom/masterrom/sdstorage/SdStorageModeActivity;)Landroid/widget/ScrollView;
 
     move-result-object p1
 
-    .line 457
-    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$10;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
+    invoke-virtual {p1}, Landroid/widget/ScrollView;->getScrollY()I
 
-    invoke-static {p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$1500(Lcom/masterrom/sdstorage/SdStorageModeActivity;)Landroid/widget/LinearLayout;
+    move-result p1
 
-    move-result-object p0
+    invoke-static {p0, p1}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$900(Lcom/masterrom/sdstorage/SdStorageModeActivity;I)V
 
-    iget p2, p1, Landroid/graphics/Insets;->left:I
-
-    iget v0, p1, Landroid/graphics/Insets;->top:I
-
-    iget v1, p1, Landroid/graphics/Insets;->right:I
-
-    iget p1, p1, Landroid/graphics/Insets;->bottom:I
-
-    invoke-virtual {p0, p2, v0, v1, p1}, Landroid/widget/LinearLayout;->setPadding(IIII)V
-
-    .line 458
-    sget-object p0, Landroid/view/WindowInsets;->CONSUMED:Landroid/view/WindowInsets;
-
-    return-object p0
+    return-void
 .end method
