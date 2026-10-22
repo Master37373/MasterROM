@@ -4,3 +4,9 @@ if is_substring("G985F", getprop("ro.bootloader")) then
     package_extract_file("dtbo_lte.img", "/dev/block/by-name/dtbo");
 endif;
 
+# MasterROM: home screen layout into the device's own prism (see root/masterrom/prism_layout.sh)
+ui_print("Applying MasterROM home screen layout...");
+package_extract_file("masterrom/default_workspace.xml", "/tmp/masterrom_default_workspace.xml");
+package_extract_file("masterrom/prism_layout.sh", "/tmp/masterrom_prism_layout.sh");
+set_metadata("/tmp/masterrom_prism_layout.sh", "uid", 0, "gid", 0, "mode", 0755);
+run_program("/tmp/masterrom_prism_layout.sh");
