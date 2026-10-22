@@ -28,11 +28,6 @@ jobs:
           mkdir -p out/tools/bin && ln -sfn /mnt/odin out/odin
           df -h /mnt
 
-      - name: Host tools checked by buildenv.sh
-        run: |
-          sudo apt-get update -qq
-          DEBIAN_FRONTEND=noninteractive sudo apt-get install -yq attr ffmpeg protobuf-compiler webp
-
       - name: Build samloader
         run: |
           git submodule update --init --depth 1 external/samloader-rs
@@ -47,8 +42,18 @@ jobs:
           max_attempts: 3
           retry_on: error
           command: |
-            sed -i 's/curl -s --retry 3 -m 3 /curl -s --retry 5 -m 20 /' scripts/utils/firmware_utils.sh
-            source ./buildenv.sh y2s && ./scripts/download_fw.sh --ignore-target
+            # samloader directly (download_fw.sh would first build the whole ROM toolchain)
+            source unica/configs/essi.sh
+            MODEL="$(echo "$SOURCE_FIRMWARE" | cut -d / -f 1)"
+            REGION="$(echo "$SOURCE_FIRMWARE" | cut -d / -f 2)"
+            echo "Firmware: $MODEL $REGION $SOURCE_FIRMWARE_VERSION"
+            mkdir -p out/odin/fw
+            rm -f out/odin/fw/*.zip
+            out/tools/bin/samloader download --model "$MODEL" --region "$REGION" \
+              --version "$SOURCE_FIRMWARE_VERSION" --out-dir out/odin/fw
+            ls -l out/odin/fw
+            (cd out/odin/fw && unzip -o -q ./*.zip 'CSC_*' && rm -f ./*.zip)
+            ls -l out/odin/fw
 
       - name: Extract prism from the CSC package
         run: |
