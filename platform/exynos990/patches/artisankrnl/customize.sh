@@ -74,6 +74,8 @@ APPLY_SEPOLICY_FIX()
     APPLY_PATCH_ONCE "$KERNEL_TMP_DIR"               "$PATCH_DIR/f2fs-bounce-page-inode.patch" "f2fs-bounce-page-inode.patch"
     # Adoptable storage: Android vold always passes "allow_encrypt_override" to dm-crypt
     APPLY_PATCH_ONCE "$KERNEL_TMP_DIR"               "$PATCH_DIR/dm-crypt-allow-encrypt-override.patch" "dm-crypt-allow-encrypt-override.patch"
+    # Battery protection (One UI 6.1+): batt_soc_rechg + full capacity events, port of Samsung sb_full_soc (S24)
+    APPLY_PATCH_ONCE "$KERNEL_TMP_DIR"               "$PATCH_DIR/battery-eu-eco-rechg.patch" "battery-eu-eco-rechg.patch"
 }
 
 STAMP_KERNEL_VERSION()

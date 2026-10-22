@@ -1,0 +1,365 @@
+diff --git a/drivers/battery_v2/include/sec_battery.h b/drivers/battery_v2/include/sec_battery.h
+index c8788798e333..801a2bb0b577 100644
+--- a/drivers/battery_v2/include/sec_battery.h
++++ b/drivers/battery_v2/include/sec_battery.h
+@@ -639,8 +639,25 @@ struct sec_battery_info {
+ 	bool support_unknown_wpcthm;
+ 	int batt_full_capacity;
+ 	bool usb_slow_chg;
++
++	/* MasterROM: battery protection ("eco") recharge, port of Samsung sb_full_soc (S24) */
++	unsigned int full_cap_event;
++	bool is_eu_eco_rechg;
++	bool eu_eco_rechg_state;
++	bool eu_eco_chg_done;
++	sec_battery_recharge_condition_t old_rechg_cond_type;
++	unsigned int old_rechg_cond_soc;
++	struct mutex eu_eco_lock;
++	struct wake_lock eu_eco_wake_lock;
++	struct delayed_work eu_eco_work;
+ };
+ 
++#define SEC_BAT_FULL_CAP_EVENT_NONE	0
++#define SEC_BAT_FULL_CAP_EVENT_HIGHSOC	1
++#define SEC_BAT_FULL_CAP_EVENT_SLEEP	2
++#define SEC_BAT_FULL_CAP_EVENT_OPTION	3
++#define SEC_BAT_EU_ECO_RECHG_DIF	5
++
+ /* event check */
+ #define EVENT_NONE				(0)
+ #define EVENT_2G_CALL			(0x1 << 0)
+@@ -681,6 +698,8 @@ extern bool sec_bat_check_vf_adc(struct sec_battery_info *battery);
+ extern int sec_bat_get_direct_chg_temp_adc(struct sec_battery_info *battery, int adc_data, int count);
+ #endif
+ extern void sec_bat_set_misc_event(struct sec_battery_info *battery, unsigned int misc_event_val, unsigned int misc_event_mask);
++extern void sec_bat_full_capacity_changed(struct sec_battery_info *battery);
++extern void sec_bat_eu_eco_set(struct sec_battery_info *battery, bool enable);
+ extern void sec_bat_set_tx_event(struct sec_battery_info *battery, unsigned int tx_event_val, unsigned int tx_event_mask);
+ extern void sec_bat_set_current_event(struct sec_battery_info *battery, unsigned int current_event_val, unsigned int current_event_mask);
+ extern void sec_bat_set_temp_control_test(struct sec_battery_info *battery, bool temp_enable);
+diff --git a/drivers/battery_v2/include/sec_battery_sysfs.h b/drivers/battery_v2/include/sec_battery_sysfs.h
+index c7d70ebe3208..9d009ce42b78 100644
+--- a/drivers/battery_v2/include/sec_battery_sysfs.h
++++ b/drivers/battery_v2/include/sec_battery_sysfs.h
+@@ -255,6 +255,7 @@ enum {
+ 	PD_DISABLE,
+ 	BATT_FULL_CAPACITY,
+ 	LRP,
++	BATT_SOC_RECHG,
+ };
+ 
+ enum {
+diff --git a/drivers/battery_v2/sec_battery.c b/drivers/battery_v2/sec_battery.c
+index d2049293b92a..b27f0ca86a48 100644
+--- a/drivers/battery_v2/sec_battery.c
++++ b/drivers/battery_v2/sec_battery.c
+@@ -1935,7 +1935,11 @@ __visible_for_testing void sec_bat_set_charging_status(struct sec_battery_info *
+ 		break;
+ 	case POWER_SUPPLY_STATUS_NOT_CHARGING:
+ 	case POWER_SUPPLY_STATUS_DISCHARGING:
+-		if ((battery->status == POWER_SUPPLY_STATUS_FULL ||
++		if (battery->status == POWER_SUPPLY_STATUS_FULL &&
++		    battery->capacity < 100 && battery->is_eu_eco_rechg) {
++			pr_info("%s : EU eco case do not Fg scale, capacity(%d)\n",
++				__func__, battery->capacity);
++		} else if ((battery->status == POWER_SUPPLY_STATUS_FULL ||
+ 		     (battery->capacity == 100 && !is_slate_mode(battery))) &&
+ 		    !battery->store_mode && battery->charging_enabled) {
+ 
+@@ -4975,6 +4979,14 @@ static void sec_bat_check_full_capacity(struct sec_battery_info *battery)
+ {
+ 	int rechg_capacity = battery->batt_full_capacity - 2;
+ 
++	/* HIGHSOC: limit set while already above it; buck stays off until it drops below */
++	if (battery->full_cap_event == SEC_BAT_FULL_CAP_EVENT_HIGHSOC &&
++	    battery->capacity <= battery->batt_full_capacity) {
++		battery->full_cap_event = SEC_BAT_FULL_CAP_EVENT_NONE;
++		if (battery->misc_event & BATT_MISC_EVENT_FULL_CAPACITY)
++			sec_bat_set_charge(battery, SEC_BAT_CHG_MODE_CHARGING_OFF);
++	}
++
+ 	if (battery->batt_full_capacity >= 100 || battery->batt_full_capacity <= 0 ||
+ 		battery->status == POWER_SUPPLY_STATUS_DISCHARGING) {
+ 		if (battery->misc_event & BATT_MISC_EVENT_FULL_CAPACITY) {
+@@ -4988,6 +5000,7 @@ static void sec_bat_check_full_capacity(struct sec_battery_info *battery)
+ 	if (battery->misc_event & BATT_MISC_EVENT_FULL_CAPACITY) {
+ 		if (battery->capacity <= rechg_capacity) {
+ 			pr_info("%s : start re-charging(%d, %d)\n", __func__, battery->capacity, rechg_capacity);
++			battery->full_cap_event = SEC_BAT_FULL_CAP_EVENT_NONE;
+ 			sec_bat_recov_full_capacity(battery);
+ 		}
+ 	} else if (battery->capacity >= battery->batt_full_capacity) {
+@@ -4996,11 +5009,123 @@ static void sec_bat_check_full_capacity(struct sec_battery_info *battery)
+ 		sec_bat_set_misc_event(battery, BATT_MISC_EVENT_FULL_CAPACITY,
+ 			BATT_MISC_EVENT_FULL_CAPACITY);
+ 		sec_bat_set_charging_status(battery, POWER_SUPPLY_STATUS_NOT_CHARGING);
+-		sec_bat_set_charge(battery, SEC_BAT_CHG_MODE_CHARGING_OFF);
++		sec_bat_set_charge(battery,
++			(battery->full_cap_event == SEC_BAT_FULL_CAP_EVENT_HIGHSOC) ?
++				SEC_BAT_CHG_MODE_BUCK_OFF : SEC_BAT_CHG_MODE_CHARGING_OFF);
+ 		sec_bat_send_cs100(battery);
+ 	}
+ }
+ 
++/* batt_full_capacity changed from sysfs */
++void sec_bat_full_capacity_changed(struct sec_battery_info *battery)
++{
++	if (battery->misc_event & BATT_MISC_EVENT_FULL_CAPACITY)
++		sec_bat_recov_full_capacity(battery);
++
++	wake_lock(&battery->monitor_wake_lock);
++	queue_delayed_work(battery->monitor_wqueue, &battery->monitor_work, 0);
++}
++
++/*
++ * Battery protection "eco" recharge (One UI 6.1+, sysfs batt_soc_rechg), ported from
++ * Samsung's sb_full_soc.c: after a full charge, recharge only once the level has
++ * dropped to 95% instead of topping up by voltage.
++ */
++static bool sec_bat_eu_eco_rechg_ui_condition(struct sec_battery_info *battery)
++{
++	if (battery->pdata->recharge_condition_type & SEC_BATTERY_RECHARGE_CONDITION_SOC)
++		return (battery->capacity <= battery->pdata->recharge_condition_soc);
++
++	return false;
++}
++
++static bool sec_bat_check_eu_eco_full_status(struct sec_battery_info *battery)
++{
++	if (!battery->is_eu_eco_rechg ||
++	    battery->status != POWER_SUPPLY_STATUS_FULL) {
++		battery->eu_eco_chg_done = false;
++		return false;
++	}
++
++	if (battery->capacity >= 100) {
++		battery->eu_eco_chg_done = true;
++	} else if (battery->eu_eco_chg_done) {
++		battery->eu_eco_chg_done = false;
++
++		if (battery->is_recharging ||
++		    battery->charging_mode == SEC_BATTERY_CHARGING_2ND) {
++			pr_info("%s: fixed the 2nd fullcharged!!!(%d, %d)\n",
++				__func__, battery->is_recharging, battery->charging_mode);
++			return true;
++		}
++	}
++
++	return false;
++}
++
++static void sec_bat_eu_eco_work(struct work_struct *work)
++{
++	struct sec_battery_info *battery =
++		container_of(work, struct sec_battery_info, eu_eco_work.work);
++	union power_supply_propval value = {0, };
++
++	pr_info("%s: start (%d, %d, %d, %d)\n", __func__,
++		battery->eu_eco_rechg_state, battery->is_eu_eco_rechg,
++		battery->status, battery->capacity);
++
++	mutex_lock(&battery->eu_eco_lock);
++	if (battery->is_eu_eco_rechg == battery->eu_eco_rechg_state)
++		goto end_work;
++
++	if (battery->status != POWER_SUPPLY_STATUS_FULL ||
++	    battery->capacity >= 100)
++		goto update_state;
++
++	if (battery->eu_eco_rechg_state) {
++		pr_info("%s : Update fg scale to %d%%\n", __func__, battery->capacity);
++		value.intval = 99;
++		psy_do_property(battery->pdata->fuelgauge_name, set,
++			POWER_SUPPLY_PROP_CHARGE_FULL, value);
++	} else {
++		sec_bat_set_charging_status(battery, POWER_SUPPLY_STATUS_CHARGING);
++		battery->is_recharging = false;
++		battery->charging_mode = SEC_BATTERY_CHARGING_1ST;
++		sec_bat_set_charge(battery, SEC_BAT_CHG_MODE_CHARGING);
++		pr_info("%s: battery status full -> charging, Cap(%d)\n",
++			__func__, battery->capacity);
++	}
++
++	wake_lock(&battery->monitor_wake_lock);
++	queue_delayed_work(battery->monitor_wqueue, &battery->monitor_work, 0);
++
++update_state:
++	pr_info("%s: update eu eco rechg(%d --> %d)\n", __func__,
++		battery->is_eu_eco_rechg, battery->eu_eco_rechg_state);
++	battery->is_eu_eco_rechg = battery->eu_eco_rechg_state;
++end_work:
++	mutex_unlock(&battery->eu_eco_lock);
++	wake_unlock(&battery->eu_eco_wake_lock);
++}
++
++void sec_bat_eu_eco_set(struct sec_battery_info *battery, bool enable)
++{
++	mutex_lock(&battery->eu_eco_lock);
++	battery->eu_eco_rechg_state = enable;
++	if (enable) {
++		battery->pdata->recharge_condition_type = SEC_BATTERY_RECHARGE_CONDITION_SOC;
++		battery->pdata->recharge_condition_soc = 100 - SEC_BAT_EU_ECO_RECHG_DIF;
++	} else {
++		battery->pdata->recharge_condition_type = battery->old_rechg_cond_type;
++		battery->pdata->recharge_condition_soc = battery->old_rechg_cond_soc;
++	}
++
++	wake_lock(&battery->eu_eco_wake_lock);
++	queue_delayed_work(battery->monitor_wqueue, &battery->eu_eco_work, 0);
++	mutex_unlock(&battery->eu_eco_lock);
++
++	pr_info("%s: set eu eco rechg(%d)\n", __func__, enable);
++}
++
+ static void sec_bat_monitor_work(
+ 				struct work_struct *work)
+ {
+@@ -5164,6 +5289,10 @@ static void sec_bat_monitor_work(
+ 	sec_bat_fullcharged_check(battery);
+ #endif /* CONFIG_BATTERY_SWELLING */
+ 
++	/* 5-1. eu eco (battery protection) check */
++	if (sec_bat_check_eu_eco_full_status(battery))
++		sec_bat_do_fullcharged(battery, true);
++
+ 	/* 7. additional check */
+ 	if (battery->pdata->monitor_additional_check)
+ 		battery->pdata->monitor_additional_check();
+@@ -6606,6 +6735,12 @@ static int sec_bat_get_property(struct power_supply *psy,
+ 				val->intval = POWER_SUPPLY_STATUS_CHARGING;
+ 			} else
+ #endif
++			if (battery->is_eu_eco_rechg &&
++			    battery->status == POWER_SUPPLY_STATUS_FULL &&
++			    (battery->is_recharging ||
++			     sec_bat_eu_eco_rechg_ui_condition(battery)))
++				val->intval = POWER_SUPPLY_STATUS_CHARGING;
++			else
+ 				val->intval = battery->status;
+ 		}
+ 		break;
+@@ -6716,7 +6851,8 @@ static int sec_bat_get_property(struct power_supply *psy,
+ 			pr_info("%s : capacity(%d)\n", __func__, val->intval);
+ 		} else {
+ #if defined(CONFIG_ENG_BATTERY_CONCEPT)
+-			if (battery->status == POWER_SUPPLY_STATUS_FULL) {
++			if (battery->status == POWER_SUPPLY_STATUS_FULL &&
++			    !battery->is_eu_eco_rechg) {
+ 				if(battery->eng_not_full_status)
+ 					val->intval = battery->capacity;
+ 				else
+@@ -6725,7 +6861,8 @@ static int sec_bat_get_property(struct power_supply *psy,
+ 				val->intval = battery->capacity;
+ 			}
+ #else
+-			if (battery->status == POWER_SUPPLY_STATUS_FULL) {
++			if (battery->status == POWER_SUPPLY_STATUS_FULL &&
++			    !battery->is_eu_eco_rechg) {
+ 				val->intval = 100;
+ 			} else {
+ 				val->intval = battery->capacity;
+@@ -8850,6 +8987,8 @@ static int sec_battery_probe(struct platform_device *pdev)
+ 		       "sec-battery-vbus");
+ 	wake_lock_init(&battery->afc_wake_lock, WAKE_LOCK_SUSPEND,
+ 		       "sec-battery-afc");
++	wake_lock_init(&battery->eu_eco_wake_lock, WAKE_LOCK_SUSPEND,
++		       "sec-battery-full-soc");
+ 	wake_lock_init(&battery->siop_level_wake_lock, WAKE_LOCK_SUSPEND,
+ 			"sec-battery-siop_level");
+ 	wake_lock_init(&battery->ext_event_wake_lock, WAKE_LOCK_SUSPEND,
+@@ -9055,6 +9194,14 @@ static int sec_battery_probe(struct platform_device *pdev)
+ 	battery->batt_full_capacity = 0;
+ 	battery->usb_slow_chg = false;
+ 
++	battery->full_cap_event = SEC_BAT_FULL_CAP_EVENT_NONE;
++	battery->is_eu_eco_rechg = false;
++	battery->eu_eco_rechg_state = false;
++	battery->eu_eco_chg_done = false;
++	battery->old_rechg_cond_type = battery->pdata->recharge_condition_type;
++	battery->old_rechg_cond_soc = battery->pdata->recharge_condition_soc;
++	mutex_init(&battery->eu_eco_lock);
++
+ 	/* Check High Voltage charging option for wireless charging */
+ 	/* '1' means disabling High Voltage charging */
+ 	if (charging_night_mode == '1')
+@@ -9109,6 +9256,7 @@ static int sec_battery_probe(struct platform_device *pdev)
+ 	}
+ 
+ 	INIT_DELAYED_WORK(&battery->monitor_work, sec_bat_monitor_work);
++	INIT_DELAYED_WORK(&battery->eu_eco_work, sec_bat_eu_eco_work);
+ 	INIT_DELAYED_WORK(&battery->cable_work, sec_bat_cable_work);
+ 	INIT_DELAYED_WORK(&battery->wpc_tx_work, sec_bat_wpc_tx_work);
+ 	INIT_DELAYED_WORK(&battery->wpc_tx_en_work, sec_bat_wpc_tx_en_work);
+diff --git a/drivers/battery_v2/sec_battery_sysfs.c b/drivers/battery_v2/sec_battery_sysfs.c
+index 373049f10e61..9052a5730ba3 100644
+--- a/drivers/battery_v2/sec_battery_sysfs.c
++++ b/drivers/battery_v2/sec_battery_sysfs.c
+@@ -234,6 +234,7 @@ static struct device_attribute sec_battery_attrs[] = {
+ 	SEC_BATTERY_ATTR(pd_disable),
+ 	SEC_BATTERY_ATTR(batt_full_capacity),
+ 	SEC_BATTERY_ATTR(lrp),
++	SEC_BATTERY_ATTR(batt_soc_rechg),
+ };
+ 
+ void update_external_temp_table(struct sec_battery_info *battery, int temp[])
+@@ -1740,6 +1741,9 @@ ssize_t sec_bat_show_attrs(struct device *dev,
+ 	case LRP:
+ 		i += scnprintf(buf + i, PAGE_SIZE - i, "%d\n", battery->lrp);
+ 		break;
++	case BATT_SOC_RECHG:
++		i += scnprintf(buf + i, PAGE_SIZE - i, "%d\n", battery->is_eu_eco_rechg);
++		break;
+ 	default:
+ 		i = -EINVAL;
+ 		break;
+@@ -3516,20 +3520,43 @@ ssize_t sec_bat_store_attrs(
+ 		}
+ 		break;
+ 	case BATT_FULL_CAPACITY:
+-		if (sscanf(buf, "%10d\n", &x) == 1) {
++	{
++		/* "<capacity>[ HIGHSOC|SLEEP|OPTION]", as written by One UI 6.1+ battery protection */
++		unsigned int event = SEC_BAT_FULL_CAP_EVENT_NONE;
++		char ev[16] = { 0, };
++		int n = 0;
++
++		if (sscanf(buf, "%10d%n", &x, &n) >= 1) {
++			if (n > 0 && sscanf(buf + n, "%15s", ev) == 1) {
++				if (!strncmp(ev, "HIGHSOC", sizeof(ev)))
++					event = SEC_BAT_FULL_CAP_EVENT_HIGHSOC;
++				else if (!strncmp(ev, "SLEEP", sizeof(ev)))
++					event = SEC_BAT_FULL_CAP_EVENT_SLEEP;
++				else if (!strncmp(ev, "OPTION", sizeof(ev)))
++					event = SEC_BAT_FULL_CAP_EVENT_OPTION;
++			}
+ 			if (x >= 0 && x <= 100) {
+-				pr_info("%s: update BATT_FULL_CAPACITY(%d)\n", __func__, x);
+-				battery->batt_full_capacity = x;
+-
+-				wake_lock(&battery->monitor_wake_lock);
+-				queue_delayed_work(battery->monitor_wqueue,
+-					&battery->monitor_work, 0);
++				pr_info("%s: update BATT_FULL_CAPACITY(%d, event %u)\n", __func__, x, event);
++				if (battery->batt_full_capacity != x ||
++				    battery->full_cap_event != event) {
++					battery->batt_full_capacity = x;
++					battery->full_cap_event = event;
++					sec_bat_full_capacity_changed(battery);
++				}
+ 			} else {
+ 				pr_info("%s: out of range(%d)\n", __func__, x);
+ 			}
+ 			ret = count;
+ 		}
+ 		break;
++	}
++	case BATT_SOC_RECHG:
++		if (sscanf(buf, "%10d\n", &x) == 1) {
++			pr_info("%s: BATT_SOC_RECHG(%d)\n", __func__, x);
++			sec_bat_eu_eco_set(battery, !!x);
++			ret = count;
++		}
++		break;
+ 	default:
+ 		ret = -EINVAL;
+ 		break;
