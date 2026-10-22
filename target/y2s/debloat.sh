@@ -2,9 +2,9 @@
 #
 # Sourced after unica/debloat.sh and platform/exynos990/debloat.sh (unica/patches/_debloat),
 # so it can take Samsung system apps back out of their delete lists. Brought back: Gaming Hub,
-# Samsung Kids, Samsung Language Core, Smart Touch Call. Everything else UN1CA removes stays
-# removed (Link to Windows stays the stub). Partner apps (Meta, OneDrive, ...) come like on stock
-# through "Recommended apps" in the setup wizard.
+# Samsung Kids, Samsung Language Core, Smart Touch Call, Microsoft OneDrive. Everything else UN1CA
+# removes stays removed (Link to Windows stays the stub). Other partner apps (Meta, Office, ...) come
+# like on stock through "Recommended apps" in the setup wizard.
 
 # KEEP <partition list variable> <entry>... : removes exact entries from a debloat list
 KEEP()
@@ -39,5 +39,10 @@ KEEP SYSTEM_DEBLOAT \
     "system/etc/default-permissions/default-permissions-com.samsung.android.visualars.xml" \
     "system/etc/permissions/privapp-permissions-com.samsung.android.visualars.xml" \
     "system/priv-app/SmartTouchCall"
+
+# Microsoft OneDrive (part of the S24+ home screen layout)
+KEEP SYSTEM_DEBLOAT \
+    "system/etc/permissions/privapp-permissions-com.microsoft.skydrive.xml" \
+    "system/priv-app/OneDrive_Samsung_v3"
 
 unset -f KEEP
