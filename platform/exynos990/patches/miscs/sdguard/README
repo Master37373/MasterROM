@@ -1,0 +1,7 @@
+AdoptedSdGuard (MasterROM): refuses format/repartition of an SD card used as internal storage
+(adopted) unless the caller is the system (Settings, factory reset), root or the shell, and opens
+the SD card page in Settings with an explanation instead. Hooked into StorageManagerService
+(services.jar) by ../customize.sh; My Files is not modified, so its app updates keep the protection.
+src/  : Java source
+smali/: compiled form that the build copies into services.jar (new smali_classesN dir).
+Rebuild: run the "SD storage page (Java -> smali)" workflow (.github/workflows/sdstorage.yml).

@@ -281,6 +281,38 @@ for W in StorageWizardMigrateProgress StorageWizardReady; do
 done
 unset W SUPER
 
+# SD card used as internal storage (adopted): only the system (Settings, factory reset), root and
+# the shell may format or repartition it. Other apps (e.g. My Files) are refused and the SD card
+# page opens with an explanation instead. Lives in services.jar, so My Files updates keep it.
+# Source: sdguard/src (compiled to sdguard/smali by .github/workflows/sdstorage.yml).
+DECODE_APK "system" "system/framework/services.jar"
+SVC="$APKTOOL_DIR/system/framework/services.jar"
+if ! find "$SVC" -path '*/com/masterrom/storageguard/AdoptedSdGuard.smali' | grep -q .; then
+    [ -f "$MODPATH/sdguard/smali/com/masterrom/storageguard/AdoptedSdGuard.smali" ] || \
+        ABORT "sdguard/smali missing: run the \"SD storage page (Java -> smali)\" workflow"
+    N=2
+    while [ -d "$SVC/smali_classes$N" ]; do N=$((N + 1)); done
+    EVAL "mkdir -p \"$SVC/smali_classes$N\""
+    EVAL "cp -a \"$MODPATH/sdguard/smali/.\" \"$SVC/smali_classes$N/\""
+    LOG "- Added AdoptedSdGuard to services.jar smali_classes$N"
+fi
+F="$(find "$SVC" -path '*/com/android/server/StorageManagerService.smali' | head -n 1)"
+[ -n "$F" ] || ABORT "StorageManagerService.smali not found"
+for M in 'format(Ljava/lang/String;)V' 'partitionPublic(Ljava/lang/String;)V' \
+         'partitionPrivate(Ljava/lang/String;)V' 'partitionMixed(Ljava/lang/String;I)V'; do
+    if ! grep -A3 -F ".method public $M" "$F" | grep -q 'AdoptedSdGuard;->check'; then
+        M="$M" perl -0pi -e 's/(\.method public (?:final )?\Q$ENV{M}\E\n\s*\.locals \d+\n)/$1\n    invoke-static {p1}, Lcom\/masterrom\/storageguard\/AdoptedSdGuard;->check(Ljava\/lang\/String;)V\n/' "$F"
+    fi
+    if grep -A3 -F ".method public $M" "$F" | grep -q 'AdoptedSdGuard;->check'; then
+        LOG "- StorageManagerService.$M: SD card guard added"
+    elif [[ "$M" == partitionPublic* ]] || [[ "$M" == format* ]]; then
+        ABORT "Failed to add the SD card guard to StorageManagerService.$M"
+    else
+        LOGW "StorageManagerService.$M not found, SD card guard skipped there"
+    fi
+done
+unset SVC F M N
+
 for L in "values:Use SD card as internal storage:Switch between portable and encrypted internal storage" \
          "values-de:SD-Karte als internen Speicher nutzen:Zwischen tragbarem und verschlüsseltem internem Speicher wechseln"; do
     DIR="${L%%:*}"; REST="${L#*:}"; TITLE="${REST%%:*}"; SUMMARY="${REST#*:}"

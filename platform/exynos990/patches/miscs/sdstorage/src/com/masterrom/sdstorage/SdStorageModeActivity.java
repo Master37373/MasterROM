@@ -74,6 +74,8 @@ public class SdStorageModeActivity extends Activity {
     private static final String EXTRA_MOVE_ID = "android.content.pm.extra.MOVE_ID";
     /** set when a stock storage wizard page forwarded to this page */
     private static final String EXTRA_FROM_WIZARD = "com.masterrom.sdstorage.FROM_WIZARD";
+    /** set by AdoptedSdGuard (services.jar) when an app tried to format the adopted card */
+    private static final String EXTRA_FROM_GUARD = "com.masterrom.sdstorage.FROM_GUARD";
     private static final int MATCH_ANY_USER = 0x00400000; // PackageManager.MATCH_ANY_USER (hidden)
     private static final String SECURE_FOLDER_PKG = "com.samsung.knox.securefolder";
 
@@ -150,7 +152,10 @@ public class SdStorageModeActivity extends Activity {
                 == Configuration.UI_MODE_NIGHT_YES;
         loadColors();
         buildFrame();
-        if (!resumeMove(getIntent())) showMain();
+        if (!resumeMove(getIntent())) {
+            showMain();
+            showGuardHint(getIntent());
+        }
         try { mSm.registerListener(mListener); } catch (Throwable e) { Log.w(TAG, "registerListener", e); }
     }
 
@@ -180,7 +185,33 @@ public class SdStorageModeActivity extends Activity {
         setIntent(intent);
         // a move started on this page is already shown; otherwise pick up the one the
         // notification refers to. "SD card ready" just brings the page to the front.
-        if (!mBusy) resumeMove(intent);
+        if (!mBusy && !resumeMove(intent) && intent.getBooleanExtra(EXTRA_FROM_GUARD, false)) {
+            showMain();
+            showGuardHint(intent);
+        }
+    }
+
+    /**
+     * Another app (e.g. My Files) tried to format the SD card while it is used as internal
+     * storage; the system refused and opened this page. Explain why and offer the safe way.
+     */
+    private void showGuardHint(Intent intent) {
+        if (intent == null || !intent.getBooleanExtra(EXTRA_FROM_GUARD, false)) return;
+        intent.removeExtra(EXTRA_FROM_GUARD);
+        final DiskInfo disk = findSdDisk();
+        final VolumeInfo priv = disk != null ? findVolume(disk, VolumeInfo.TYPE_PRIVATE) : null;
+        if (priv == null) return;
+        showSheet(t("SD-Karte wird als interner Speicher genutzt", "SD card is used as internal storage"),
+                t("Eine App wollte die SD-Karte formatieren. Darauf liegen verschlüsselte Dateien und eventuell "
+                        + "Apps – beim Formatieren wären sie verloren, deshalb wurde es verhindert.\n\n"
+                        + "Wenn du die Karte wieder als tragbaren Speicher nutzen willst, holt „Tragbar machen“ "
+                        + "deine Dateien und Apps vorher in den internen Speicher zurück.",
+                        "An app tried to format the SD card. It holds encrypted files and possibly apps – "
+                        + "formatting would have lost them, so it was prevented.\n\n"
+                        + "If you want to use the card as portable storage again, \"Make portable\" first "
+                        + "moves your files and apps back to internal storage."),
+                SdAnimView.MODE_TO_PORTABLE, t("Schließen", "Close"), t("Tragbar machen", "Make portable"), false,
+                new Runnable() { @Override public void run() { toPortable(disk, priv); } });
     }
 
     /** Shows the progress of a running move (started elsewhere) on the working page. */

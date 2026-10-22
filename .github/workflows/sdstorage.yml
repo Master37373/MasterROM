@@ -4,6 +4,7 @@ name: SD storage page (Java -> smali)
 # Only the classes that need nothing but the Android framework are rebuilt
 # (SdStorageModeActivity, SdAnimView, SdGlassBackground, SdGlyphView). ResetGuard and
 # SdStoragePreferenceController use SecSettings classes and keep their existing smali.
+# Also compiles miscs/sdguard/src (AdoptedSdGuard, goes into services.jar) to sdguard/smali.
 
 on:
   workflow_dispatch:
@@ -54,6 +55,15 @@ jobs:
           (cd "$T" && unzip -o -q out.zip classes.dex && zip -q sd.jar classes.dex)
           java -jar "$T/apktool.jar" d -f -r "$T/sd.jar" -o "$T/dec"
           ls "$T/dec/smali/com/masterrom/sdstorage"
+          # services.jar guard (separate dex so it does not end up in SecSettings)
+          G="platform/exynos990/patches/miscs/sdguard/src/com/masterrom/storageguard"
+          mkdir -p "$T/gcls"
+          javac -nowarn -source 8 -target 8 -bootclasspath "$A" -implicit:none -d "$T/gcls" "$G/AdoptedSdGuard.java"
+          java -cp "$T/r8.jar" com.android.tools.r8.D8 --release --min-api 31 --lib "$A" \
+            --output "$T/gout.zip" $(find "$T/gcls" -name '*.class')
+          (cd "$T" && rm -f classes.dex && unzip -o -q gout.zip classes.dex && zip -q guard.jar classes.dex)
+          java -jar "$T/apktool.jar" d -f -r "$T/guard.jar" -o "$T/gdec"
+          ls "$T/gdec/smali/com/masterrom/storageguard"
 
       - name: Replace smali and commit
         run: |
@@ -62,7 +72,11 @@ jobs:
           cp "$T/dec/smali/com/masterrom/sdstorage/"*.smali "$DST/"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A "$DST"
+          GDST="platform/exynos990/patches/miscs/sdguard/smali/com/masterrom/storageguard"
+          mkdir -p "$GDST"
+          rm -f "$GDST"/AdoptedSdGuard*.smali
+          cp "$T/gdec/smali/com/masterrom/storageguard/"*.smali "$GDST/"
+          git add -A "$DST" "$GDST"
           git status --short
           git commit -m "sdstorage: rebuild smali from src" || { echo "smali unchanged"; exit 0; }
           git push
