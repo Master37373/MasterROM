@@ -98,8 +98,7 @@ jobs:
 
       - name: List preinstalled apps (system, product, preload)
         run: |
-          sudo apt-get install -yq aapt android-sdk-libsparse-utils erofs-utils "linux-modules-extra-$(uname -r)" >/dev/null
-          sudo modprobe erofs || true
+          sudo apt-get install -yq aapt android-sdk-libsparse-utils erofs-utils >/dev/null
           AP_TAR="$(find out/odin/ -name 'AP_*.tar.md5' | head -n 1)"
           echo "AP package: $AP_TAR"
           mkdir -p /mnt/csc/ap && cd /mnt/csc/ap
@@ -116,9 +115,16 @@ jobs:
           for P in system product; do
             IMG="$(ls parts/${P}.img parts/${P}_a.img 2>/dev/null | head -n 1)"
             [ -n "$IMG" ] || continue
-            sudo mkdir -p "m_$P" && sudo mount -o loop,ro "$IMG" "m_$P"
+            # erofs: unpack without a kernel driver; ext4: loop mount
+            if file -b "$IMG" | grep -qi erofs; then
+              sudo fsck.erofs --extract="m_$P" "$IMG" >/dev/null
+              MOUNTED=false
+            else
+              sudo mkdir -p "m_$P" && sudo mount -o loop,ro "$IMG" "m_$P"
+              MOUNTED=true
+            fi
             # system.img has the real tree under system/
-            ROOT="m_$P"; [ -d "m_$P/system/app" ] && ROOT="m_$P/system"
+            ROOT="m_$P"; sudo test -d "m_$P/system/app" && ROOT="m_$P/system"
             for D in app priv-app preload; do
               sudo test -d "$ROOT/$D" || continue
               sudo find "$ROOT/$D" -name '*.apk' | sort | while read -r A; do
@@ -126,7 +132,8 @@ jobs:
                 echo "$P/$D  ${A#$ROOT/$D/}  $PKG" >> "$OUT"
               done
             done
-            sudo umount "m_$P"
+            if $MOUNTED; then sudo umount "m_$P"; else sudo rm -rf "m_$P"; fi
+            rm -f "$IMG"
           done
           wc -l "$OUT"
           grep -iE "spage|skydrive|office|outlook|linkedin|bard|messaging|gamehome|samsungapps|tachyon|videos" "$OUT" || true
