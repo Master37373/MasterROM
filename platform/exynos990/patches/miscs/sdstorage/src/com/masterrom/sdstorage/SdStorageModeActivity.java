@@ -70,6 +70,10 @@ public class SdStorageModeActivity extends Activity {
     private static final String TAG = "MasterROMSdStorage";
     private static final int MOVE_SUCCEEDED = -100;
     private static final int MOVE_FAILED_LOCKED_USER = -10;
+    /** PackageManager.EXTRA_MOVE_ID, set by SystemUI's storage move notification */
+    private static final String EXTRA_MOVE_ID = "android.content.pm.extra.MOVE_ID";
+    /** set when a stock storage wizard page forwarded to this page */
+    private static final String EXTRA_FROM_WIZARD = "com.masterrom.sdstorage.FROM_WIZARD";
     private static final int MATCH_ANY_USER = 0x00400000; // PackageManager.MATCH_ANY_USER (hidden)
     private static final String SECURE_FOLDER_PKG = "com.samsung.knox.securefolder";
 
@@ -146,8 +150,63 @@ public class SdStorageModeActivity extends Activity {
                 == Configuration.UI_MODE_NIGHT_YES;
         loadColors();
         buildFrame();
-        showMain();
+        if (!resumeMove(getIntent())) showMain();
         try { mSm.registerListener(mListener); } catch (Throwable e) { Log.w(TAG, "registerListener", e); }
+    }
+
+    /**
+     * Hook for the stock storage wizard pages (StorageWizardMigrateProgress, StorageWizardReady):
+     * SystemUI's "moving content" / "SD card ready" notifications open those. They forward here
+     * instead, so the move is shown on this page. Returns true when the wizard page may finish.
+     */
+    public static boolean redirectFromWizard(Activity wizard) {
+        try {
+            Intent i = new Intent(wizard, SdStorageModeActivity.class);
+            Intent src = wizard.getIntent();
+            if (src != null && src.getExtras() != null) i.putExtras(src.getExtras());
+            i.putExtra(EXTRA_FROM_WIZARD, wizard.getClass().getSimpleName());
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            wizard.startActivity(i);
+            return true;
+        } catch (Throwable e) {
+            Log.w(TAG, "redirectFromWizard", e);
+            return false;
+        }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        // a move started on this page is already shown; otherwise pick up the one the
+        // notification refers to. "SD card ready" just brings the page to the front.
+        if (!mBusy) resumeMove(intent);
+    }
+
+    /** Shows the progress of a running move (started elsewhere) on the working page. */
+    private boolean resumeMove(Intent intent) {
+        if (intent == null || !intent.hasExtra(EXTRA_MOVE_ID)) return false;
+        final int moveId = intent.getIntExtra(EXTRA_MOVE_ID, -1);
+        int status;
+        try {
+            status = mPm.getMoveStatus(moveId);
+        } catch (Throwable e) {
+            Log.w(TAG, "getMoveStatus " + moveId, e);
+            return false;
+        }
+        if (status == MOVE_SUCCEEDED || status < 0) return false;   // already over: main page
+        runWork(t("Verschieben", "Moving files"),
+                new Work() {
+                    @Override public String run() throws Exception {
+                        setProgressText(t("Fotos, Downloads und andere Dateien werden verschoben …",
+                                "Photos, downloads and other files are being moved …"));
+                        return waitMove(moveId);
+                    }
+                },
+                t("Fotos, Downloads und andere Dateien wurden verschoben.",
+                        "Photos, downloads and other files have been moved."),
+                null);
+        return true;
     }
 
     @Override

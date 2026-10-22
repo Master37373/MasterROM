@@ -232,7 +232,7 @@ if ! find "$SECSET" -path '*/com/masterrom/sdstorage/SdStorageModeActivity.smali
 fi
 
 if ! grep -q 'com.masterrom.sdstorage.SdStorageModeActivity' "$SECSET/AndroidManifest.xml"; then
-    sed -i 's#^\(\s*\)</application>#\1    <activity android:name="com.masterrom.sdstorage.SdStorageModeActivity" android:exported="false" android:excludeFromRecents="true" android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|uiMode|density" android:theme="@style/Theme.Settings"/>\n\1</application>#' \
+    sed -i 's#^\(\s*\)</application>#\1    <activity android:name="com.masterrom.sdstorage.SdStorageModeActivity" android:exported="false" android:excludeFromRecents="true" android:launchMode="singleTask" android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|uiMode|density" android:theme="@style/Theme.Settings"/>\n\1</application>#' \
         "$SECSET/AndroidManifest.xml"
 fi
 grep -q 'com.masterrom.sdstorage.SdStorageModeActivity' "$SECSET/AndroidManifest.xml" || \
@@ -262,6 +262,24 @@ if ! grep -q 'com/masterrom/sdstorage/ResetGuard' "$F"; then
     perl -0pi -e 's/(\.method public final onResetButtonClick\(\)V\n\s*\.locals [1-9]\d*\n)/$1\n    invoke-static {p0}, Lcom\/masterrom\/sdstorage\/ResetGuard;->intercept(Lcom\/android\/settings\/MainClearConfirm;)Z\n\n    move-result v0\n\n    if-eqz v0, :masterrom_reset_go\n\n    return-void\n\n    :masterrom_reset_go\n/' "$F"
 fi
 grep -q 'com/masterrom/sdstorage/ResetGuard;->intercept' "$F" || ABORT "Failed to hook the SD card check into the factory reset"
+
+# SystemUI's "Moving content" / "SD card ready" notifications open the stock storage wizard
+# (StorageWizardMigrateProgress, StorageWizardReady). Forward both to the SD card page, which
+# shows the running move itself (SdStorageModeActivity.redirectFromWizard / resumeMove).
+for W in StorageWizardMigrateProgress StorageWizardReady; do
+    F="$(find "$SECSET" -path "*/com/android/settings/deviceinfo/$W.smali" | head -n 1)"
+    [ -n "$F" ] || ABORT "$W.smali not found"
+    if ! grep -q 'SdStorageModeActivity;->redirectFromWizard' "$F"; then
+        SUPER="$(sed -n 's/^\.super \(L.*;\)$/\1/p' "$F" | head -n 1)"
+        [ -n "$SUPER" ] || ABORT "$W: superclass not found"
+        # at the very start of onCreate (only the parameters are live there): forward, run the
+        # superclass onCreate (Android requires it) and finish
+        SUPER="$SUPER" perl -0pi -e 's/(\.method (?:public |protected )(?:final )?onCreate\(Landroid\/os\/Bundle;\)V\n\s*\.locals )0\n/${1}1\n/; s/(\.method (?:public |protected )(?:final )?onCreate\(Landroid\/os\/Bundle;\)V\n\s*\.locals [1-9]\d*\n)/$1\n    invoke-static {p0}, Lcom\/masterrom\/sdstorage\/SdStorageModeActivity;->redirectFromWizard(Landroid\/app\/Activity;)Z\n\n    move-result v0\n\n    if-eqz v0, :masterrom_wizard_go\n\n    invoke-super {p0, p1}, $ENV{SUPER}->onCreate(Landroid\/os\/Bundle;)V\n\n    invoke-virtual {p0}, Landroid\/app\/Activity;->finish()V\n\n    return-void\n\n    :masterrom_wizard_go\n/' "$F"
+    fi
+    grep -q 'SdStorageModeActivity;->redirectFromWizard' "$F" || ABORT "Failed to forward $W to the SD card page"
+    LOG "- $W forwards to the SD card page"
+done
+unset W SUPER
 
 for L in "values:Use SD card as internal storage:Switch between portable and encrypted internal storage" \
          "values-de:SD-Karte als internen Speicher nutzen:Zwischen tragbarem und verschlüsseltem internem Speicher wechseln"; do
