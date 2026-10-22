@@ -28,6 +28,11 @@ jobs:
           mkdir -p out/tools/bin && ln -sfn /mnt/odin out/odin
           df -h /mnt
 
+      - name: Host tools checked by buildenv.sh
+        run: |
+          sudo apt-get update -qq
+          DEBIAN_FRONTEND=noninteractive sudo apt-get install -yq attr ffmpeg protobuf-compiler webp
+
       - name: Build samloader
         run: |
           git submodule update --init --depth 1 external/samloader-rs
