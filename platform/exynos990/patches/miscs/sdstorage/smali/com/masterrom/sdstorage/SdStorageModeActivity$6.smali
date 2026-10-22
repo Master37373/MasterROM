@@ -3,7 +3,7 @@
 .source "SdStorageModeActivity.java"
 
 # interfaces
-.implements Landroid/view/View$OnTouchListener;
+.implements Landroid/view/View$OnScrollChangeListener;
 
 
 # annotations
@@ -25,7 +25,7 @@
 .method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity;)V
     .locals 0
 
-    .line 349
+    .line 401
     iput-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$6;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
@@ -35,77 +35,45 @@
 
 
 # virtual methods
-.method public onTouch(Landroid/view/View;Landroid/view/MotionEvent;)Z
-    .locals 3
+.method public onScrollChange(Landroid/view/View;IIII)V
+    .locals 0
 
-    .line 351
-    invoke-virtual {p2}, Landroid/view/MotionEvent;->getActionMasked()I
-
-    move-result p1
-
-    const/4 p2, 0x1
-
-    const/4 v0, 0x0
-
-    if-nez p1, :cond_0
-
-    .line 352
+    .line 403
     iget-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$6;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-    invoke-static {p1, p2}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$802(Lcom/masterrom/sdstorage/SdStorageModeActivity;Z)Z
+    invoke-static {p1, p3}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$800(Lcom/masterrom/sdstorage/SdStorageModeActivity;I)V
 
-    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$6;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
-
-    invoke-static {p0, v0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$902(Lcom/masterrom/sdstorage/SdStorageModeActivity;Z)Z
-
-    goto :goto_0
-
-    :cond_0
-    if-eq p1, p2, :cond_1
-
-    const/4 p2, 0x3
-
-    if-ne p1, p2, :cond_2
-
-    .line 354
-    :cond_1
+    .line 404
     iget-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$6;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-    invoke-static {p1, v0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$802(Lcom/masterrom/sdstorage/SdStorageModeActivity;Z)Z
-
-    .line 355
-    iget-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$6;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
-
-    invoke-static {p1}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$700(Lcom/masterrom/sdstorage/SdStorageModeActivity;)Landroid/widget/ScrollView;
+    invoke-static {p1}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$1000(Lcom/masterrom/sdstorage/SdStorageModeActivity;)Landroid/widget/ScrollView;
 
     move-result-object p1
 
     iget-object p2, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$6;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-    invoke-static {p2}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$600(Lcom/masterrom/sdstorage/SdStorageModeActivity;)Ljava/lang/Runnable;
+    invoke-static {p2}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$900(Lcom/masterrom/sdstorage/SdStorageModeActivity;)Ljava/lang/Runnable;
 
     move-result-object p2
 
     invoke-virtual {p1, p2}, Landroid/widget/ScrollView;->removeCallbacks(Ljava/lang/Runnable;)Z
 
-    .line 356
+    .line 405
     iget-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$6;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-    invoke-static {p1}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$700(Lcom/masterrom/sdstorage/SdStorageModeActivity;)Landroid/widget/ScrollView;
+    invoke-static {p1}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$1000(Lcom/masterrom/sdstorage/SdStorageModeActivity;)Landroid/widget/ScrollView;
 
     move-result-object p1
 
     iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$6;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-    invoke-static {p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$600(Lcom/masterrom/sdstorage/SdStorageModeActivity;)Ljava/lang/Runnable;
+    invoke-static {p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$900(Lcom/masterrom/sdstorage/SdStorageModeActivity;)Ljava/lang/Runnable;
 
     move-result-object p0
 
-    const-wide/16 v1, 0x5a
+    const-wide/16 p2, 0x5a
 
-    invoke-virtual {p1, p0, v1, v2}, Landroid/widget/ScrollView;->postDelayed(Ljava/lang/Runnable;J)Z
+    invoke-virtual {p1, p0, p2, p3}, Landroid/widget/ScrollView;->postDelayed(Ljava/lang/Runnable;J)Z
 
-    :cond_2
-    :goto_0
-    return v0
+    return-void
 .end method

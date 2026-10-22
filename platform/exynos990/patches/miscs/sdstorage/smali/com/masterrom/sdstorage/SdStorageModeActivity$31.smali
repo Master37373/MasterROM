@@ -20,13 +20,19 @@
 # instance fields
 .field final synthetic this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-.field final synthetic val$doIt:Ljava/lang/Runnable;
+.field final synthetic val$disk:Landroid/os/storage/DiskInfo;
+
+.field final synthetic val$fsUuid:Ljava/lang/String;
+
+.field final synthetic val$labels:Ljava/util/List;
+
+.field final synthetic val$pkgs:Ljava/util/List;
 
 .field final synthetic val$primaryOnSd:Z
 
 
 # direct methods
-.method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity;ZLjava/lang/Runnable;)V
+.method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity;ZLjava/util/List;Ljava/util/List;Landroid/os/storage/DiskInfo;Ljava/lang/String;)V
     .locals 0
     .annotation system Ldalvik/annotation/Signature;
         value = {
@@ -34,12 +40,18 @@
         }
     .end annotation
 
-    .line 1216
+    .line 1241
     iput-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
     iput-boolean p2, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->val$primaryOnSd:Z
 
-    iput-object p3, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->val$doIt:Ljava/lang/Runnable;
+    iput-object p3, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->val$pkgs:Ljava/util/List;
+
+    iput-object p4, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->val$labels:Ljava/util/List;
+
+    iput-object p5, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->val$disk:Landroid/os/storage/DiskInfo;
+
+    iput-object p6, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->val$fsUuid:Ljava/lang/String;
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
@@ -49,26 +61,67 @@
 
 # virtual methods
 .method public run()V
-    .locals 1
+    .locals 5
 
-    .line 1217
-    iget-boolean v0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->val$primaryOnSd:Z
-
-    if-eqz v0, :cond_0
-
+    .line 1242
     iget-object v0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->val$doIt:Ljava/lang/Runnable;
+    iget-boolean v1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->val$primaryOnSd:Z
 
-    invoke-static {v0, p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$4000(Lcom/masterrom/sdstorage/SdStorageModeActivity;Ljava/lang/Runnable;)V
+    if-nez v1, :cond_1
+
+    iget-object v1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->val$pkgs:Ljava/util/List;
+
+    invoke-interface {v1}, Ljava/util/List;->isEmpty()Z
+
+    move-result v1
+
+    if-nez v1, :cond_0
 
     goto :goto_0
 
     :cond_0
-    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->val$doIt:Ljava/lang/Runnable;
+    const/4 v1, 0x0
 
-    invoke-interface {p0}, Ljava/lang/Runnable;->run()V
+    goto :goto_1
 
+    :cond_1
     :goto_0
+    const/4 v1, 0x1
+
+    :goto_1
+    invoke-static {v0, v1}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$4302(Lcom/masterrom/sdstorage/SdStorageModeActivity;Z)Z
+
+    .line 1243
+    iget-object v0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
+
+    const-string v1, "Tragbar machen"
+
+    const-string v2, "Make portable"
+
+    invoke-static {v0, v1, v2}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$200(Lcom/masterrom/sdstorage/SdStorageModeActivity;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object v1
+
+    new-instance v2, Lcom/masterrom/sdstorage/SdStorageModeActivity$31$1;
+
+    invoke-direct {v2, p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity$31$1;-><init>(Lcom/masterrom/sdstorage/SdStorageModeActivity$31;)V
+
+    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$31;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
+
+    const-string v3, "Die SD-Karte ist jetzt wieder ein tragbarer Speicher \u2013 ohne Verschl\u00fcsselung und auch in anderen Ger\u00e4ten lesbar."
+
+    const-string v4, "The SD card is portable storage again \u2013 without encryption and readable on other devices."
+
+    .line 1269
+    invoke-static {p0, v3, v4}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$200(Lcom/masterrom/sdstorage/SdStorageModeActivity;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
+
+    move-result-object p0
+
+    const/4 v3, 0x0
+
+    .line 1243
+    invoke-static {v0, v1, v2, p0, v3}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$3900(Lcom/masterrom/sdstorage/SdStorageModeActivity;Ljava/lang/String;Lcom/masterrom/sdstorage/SdStorageModeActivity$Work;Ljava/lang/String;Ljava/lang/Runnable;)V
+
     return-void
 .end method

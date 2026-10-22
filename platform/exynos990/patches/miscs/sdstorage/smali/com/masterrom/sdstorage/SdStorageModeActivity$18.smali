@@ -22,9 +22,11 @@
 
 .field final synthetic val$disk:Landroid/os/storage/DiskInfo;
 
+.field final synthetic val$priv:Landroid/os/storage/VolumeInfo;
+
 
 # direct methods
-.method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity;Landroid/os/storage/DiskInfo;)V
+.method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity;Landroid/os/storage/DiskInfo;Landroid/os/storage/VolumeInfo;)V
     .locals 0
     .annotation system Ldalvik/annotation/Signature;
         value = {
@@ -32,10 +34,12 @@
         }
     .end annotation
 
-    .line 832
+    .line 860
     iput-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$18;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
     iput-object p2, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$18;->val$disk:Landroid/os/storage/DiskInfo;
+
+    iput-object p3, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$18;->val$priv:Landroid/os/storage/VolumeInfo;
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
@@ -45,14 +49,16 @@
 
 # virtual methods
 .method public onClick(Landroid/view/View;)V
-    .locals 0
+    .locals 1
 
-    .line 833
+    .line 861
     iget-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$18;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$18;->val$disk:Landroid/os/storage/DiskInfo;
+    iget-object v0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$18;->val$disk:Landroid/os/storage/DiskInfo;
 
-    invoke-static {p1, p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$2200(Lcom/masterrom/sdstorage/SdStorageModeActivity;Landroid/os/storage/DiskInfo;)V
+    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$18;->val$priv:Landroid/os/storage/VolumeInfo;
+
+    invoke-static {p1, v0, p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$2400(Lcom/masterrom/sdstorage/SdStorageModeActivity;Landroid/os/storage/DiskInfo;Landroid/os/storage/VolumeInfo;)V
 
     return-void
 .end method

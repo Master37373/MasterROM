@@ -20,13 +20,26 @@
 # instance fields
 .field final synthetic this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
+.field final synthetic val$priv:Landroid/os/storage/VolumeInfo;
+
+.field final synthetic val$wantSd:Z
+
 
 # direct methods
-.method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity;)V
+.method constructor <init>(Lcom/masterrom/sdstorage/SdStorageModeActivity;ZLandroid/os/storage/VolumeInfo;)V
     .locals 0
+    .annotation system Ldalvik/annotation/Signature;
+        value = {
+            "()V"
+        }
+    .end annotation
 
-    .line 1128
+    .line 1180
     iput-object p1, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$28;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
+
+    iput-boolean p2, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$28;->val$wantSd:Z
+
+    iput-object p3, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$28;->val$priv:Landroid/os/storage/VolumeInfo;
 
     invoke-direct {p0}, Ljava/lang/Object;-><init>()V
 
@@ -36,21 +49,16 @@
 
 # virtual methods
 .method public run()V
-    .locals 1
+    .locals 2
 
-    .line 1128
+    .line 1181
     iget-object v0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$28;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
 
-    invoke-static {v0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$1800(Lcom/masterrom/sdstorage/SdStorageModeActivity;)Z
+    new-instance v1, Lcom/masterrom/sdstorage/SdStorageModeActivity$28$1;
 
-    move-result v0
+    invoke-direct {v1, p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity$28$1;-><init>(Lcom/masterrom/sdstorage/SdStorageModeActivity$28;)V
 
-    if-nez v0, :cond_0
+    invoke-static {v0, v1}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$4100(Lcom/masterrom/sdstorage/SdStorageModeActivity;Ljava/lang/Runnable;)V
 
-    iget-object p0, p0, Lcom/masterrom/sdstorage/SdStorageModeActivity$28;->this$0:Lcom/masterrom/sdstorage/SdStorageModeActivity;
-
-    invoke-static {p0}, Lcom/masterrom/sdstorage/SdStorageModeActivity;->access$1900(Lcom/masterrom/sdstorage/SdStorageModeActivity;)V
-
-    :cond_0
     return-void
 .end method
