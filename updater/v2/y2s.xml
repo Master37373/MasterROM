@@ -9,14 +9,16 @@
     <size>7100888635</size>
   </rom>
   <kernel channel="stable">
-    <version>ArtisanKRNL-v5.0.0-mr0.1</version>
-    <date>2026-10-19</date>
-    <filename>MasterROM-Kernel_ArtisanKRNL-v5.0.0-mr0.1_y2s.zip</filename>
-    <link>https://sourceforge.net/projects/masterrom/files/y2s/kernel/MasterROM-Kernel_ArtisanKRNL-v5.0.0-mr0.1_y2s.zip/download</link>
-    <md5>145a20450524cd5e7b1a66d58e94c8e3</md5>
-    <size>22069619</size>
+    <version>ArtisanKRNL-v5.0.0-mr0.3</version>
+    <date>2026-10-23</date>
+    <filename>MasterROM-Kernel_ArtisanKRNL-v5.0.0-mr0.3_y2s.zip</filename>
+    <link>https://sourceforge.net/projects/masterrom/files/y2s/kernel/MasterROM-Kernel_ArtisanKRNL-v5.0.0-mr0.3_y2s.zip/download</link>
+    <md5>890fc89012e5ce2a447925f13ee3b75c</md5>
+    <size>22069600</size>
     <commit>20e8daec87c11abccff26ec63f47c505eaa5b7c9</commit>
-    <patch_rev>1</patch_rev>
+    <patch_rev>3</patch_rev>
+    <change>Hi Bixby and Hey Google now work with the screen off</change>
+    <change>Battery protection: Adaptive and Maximum modes work</change>
     <change>capabilities: add Android 17 bounding-set ABI</change>
     <change>cgroup: add cgroup.kill to legacy cgroup2</change>
     <change>binder: backport freeze notifications</change>
