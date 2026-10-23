@@ -1,8 +1,8 @@
 # Speaker volume tuning for the S20+ (DEFAULT_*_VOLUME_CURVE from the S20+ vendor).
 # 1. System sounds (volume click, sound mode switch ...): the stock curve starts at -24 dB,
 #    so step 1 is loud. Steeper curve, the maximum stays at -6 dB.
-# 2. Notification and alarm: the stock curve starts at -29.7 dB, the low steps are hard to
-#    hear. Raise the lower range, the maximum stays at 0 dB. The ringtone keeps the stock curve.
+# 2. Alarm: the stock curve starts at -29.7 dB, the low steps are hard to hear. Raise the
+#    lower range, the maximum stays at 0 dB. Ringtone and notification keep the stock curve.
 # 3. Lock/unlock, screenshot, keyboard, touch and key tones do not use the system curve but
 #    Samsung's own per-step tables (situation_audio_policy_volumes_sec.xml). Lower their
 #    low steps (-14 dB at the bottom, about -6 dB in the middle, unchanged at the top).
@@ -16,14 +16,14 @@ if ! grep -q 'MasterROM: speaker volume curves v2' "$F"; then
         s#<!-- MasterROM: system sound curve, quieter low steps -->\s*<volume stream="AUDIO_STREAM_SYSTEM" deviceCategory="DEVICE_CATEGORY_SPEAKER">.*?</volume>#<volume stream="AUDIO_STREAM_SYSTEM" deviceCategory="DEVICE_CATEGORY_SPEAKER" ref="DEFAULT_SYSTEM_VOLUME_CURVE"/>#s;
         $n = 0;
         $n += s#<volume stream="AUDIO_STREAM_SYSTEM" deviceCategory="DEVICE_CATEGORY_SPEAKER"\s*ref="DEFAULT_SYSTEM_VOLUME_CURVE"\s*/>#<!-- MasterROM: speaker volume curves v2 (system) -->\n    <volume stream="AUDIO_STREAM_SYSTEM" deviceCategory="DEVICE_CATEGORY_SPEAKER">\n        <point>1,-3200</point>\n        <point>33,-2300</point>\n        <point>66,-1400</point>\n        <point>100,-600</point>\n    </volume>#;
-        for $st ("NOTIFICATION", "ALARM") {
+        for $st ("ALARM") {
             $n += s#(<volume stream="AUDIO_STREAM_$st" deviceCategory="DEVICE_CATEGORY_SPEAKER">)\s*<point>([01]),-2970</point>\s*<point>33,-2010</point>\s*<point>66,-1020</point>\s*<point>100,0</point>\s*(</volume>)#$1\n        <point>$2,-2400</point>\n        <point>33,-1600</point>\n        <point>66,-800</point>\n        <point>100,0</point>\n    $3#;
         }
         print STDOUT $n;
     ' "$F")"
-    [ "$N" = 3 ] || ABORT "Speaker volume curves: replaced $N of 3 (system, notification, alarm)"
+    [ "$N" = 2 ] || ABORT "Speaker volume curves: replaced $N of 2 (system, alarm)"
 fi
-LOG "- Speaker: system -32..-6 dB, notification/alarm -24..0 dB, ringtone stock"
+LOG "- Speaker: system -32..-6 dB, alarm -24..0 dB, ringtone and notification stock"
 
 S=""
 for p in "$WORK_DIR/vendor/etc" "$WORK_DIR/system/system/etc"; do
