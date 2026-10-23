@@ -5,7 +5,7 @@
 #    are hard to hear. Raise the lower range, the maximum stays at 0 dB.
 # 3. Lock/unlock, screenshot, keyboard, touch and key tones do not use the system curve but
 #    Samsung's own per-step tables (situation_audio_policy_volumes_sec.xml). Lower their
-#    low steps by the same amount as the system curve (-8 dB at the bottom, unchanged at the top).
+#    low steps (-14 dB at the bottom, about -6 dB in the middle, unchanged at the top).
 # Only speaker entries are touched; earpiece, headset, Bluetooth and media keep their stock curves.
 F="$WORK_DIR/vendor/etc/audio_policy_volumes.xml"
 [ -f "$F" ] || ABORT "audio_policy_volumes.xml not found"
@@ -44,7 +44,7 @@ elif ! grep -q 'MasterROM: quieter low steps' "$S"; then
                     my @v = split /\s*,\s*/, $list =~ s/^\s+|\s+$//gr;
                     my $last = $#v || 1;
                     for my $i (0 .. $#v) {
-                        my $att = 8 * (1 - $i / $last);            # dB, 8 at the bottom, 0 at the top
+                        my $att = 14 * (1 - $i / $last) ** 1.3;    # dB: 14 at the bottom, ~6 in the middle, 0 at the top
                         my $x = floor($v[$i] * 10 ** (-$att / 20) + 0.5);
                         $x = 1 if $x < 1 && $v[$i] > 0;
                         $v[$i] = $x;
@@ -59,6 +59,6 @@ elif ! grep -q 'MasterROM: quieter low steps' "$S"; then
         print STDERR "situation tables lowered: $n\n";
     ' "$S"
     grep -q 'MasterROM: quieter low steps' "$S" || ABORT "Failed to lower the lock screen/keyboard tone tables"
-    LOG "- Lock screen, screenshot, keyboard, touch and key tones: low steps up to -8 dB quieter"
+    LOG "- Lock screen, screenshot, keyboard, touch and key tones: low steps up to -14 dB quieter"
 fi
 unset F S
