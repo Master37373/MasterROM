@@ -1,18 +1,26 @@
 <p align="center">
-  <a href="https://github.com/Master37373/MasterROM/blob/sixteen-qpr2/LICENSE"><img loading="lazy" src="https://img.shields.io/github/license/Master37373/MasterROM?style=for-the-badge&logo=github"/></a>
-  <a href="https://github.com/Master37373/MasterROM/commits/sixteen-qpr2"><img loading="lazy" src="https://img.shields.io/github/last-commit/Master37373/MasterROM/sixteen-qpr2?style=for-the-badge"/></a>
+  <img src="branding/readme_banner.png" alt="MasterROM Opus – custom firmware for the Galaxy S20+" width="100%"/>
 </p>
-<p align="center">MasterROM <i>Opus</i> is a custom firmware for the Samsung Galaxy S20+ (Exynos 990), based on ArtisanROM.</p>
 
 <p align="center">
-  <a href="https://github.com/Master37373/MasterROM/issues">🚀 Issues</a>
-  •
-  <a href="https://github.com/Master37373/MasterROM/blob/sixteen-qpr2/CHANGELOG.md">📝 Changelog</a>
-  •
-  <a href="https://github.com/Master37373/MasterROM-Updater">📲 Updater</a>
-  •
-  <a href="https://github.com/ArtisanROM/ArtisanROM">🎨 ArtisanROM (original)</a>
+  <a href="https://sourceforge.net/projects/masterrom/files/y2s/"><img alt="Latest version" src="https://img.shields.io/badge/dynamic/xml?url=https%3A%2F%2Fraw.githubusercontent.com%2FMaster37373%2FMasterROM%2Fmain%2Fupdater%2Fv2%2Fy2s.xml&query=%2Froms%2From%2Fversion&prefix=v&label=version&style=for-the-badge&color=2F8CFF"/></a>
+  <a href="https://sourceforge.net/projects/masterrom/files/y2s/"><img alt="Downloads" src="https://img.shields.io/sourceforge/dt/masterrom?style=for-the-badge&label=downloads&color=14B5C9"/></a>
+  <img alt="One UI 8.5" src="https://img.shields.io/badge/One_UI-8.5-5B6CFF?style=for-the-badge&logo=samsung&logoColor=white"/>
+  <img alt="Android 16" src="https://img.shields.io/badge/Android-16-3DDC84?style=for-the-badge&logo=android&logoColor=white"/>
+  <br>
+  <a href="https://github.com/Master37373/MasterROM/blob/sixteen-qpr2/LICENSE"><img alt="License" src="https://img.shields.io/github/license/Master37373/MasterROM?style=for-the-badge&color=6b7280"/></a>
+  <a href="https://github.com/Master37373/MasterROM/commits/sixteen-qpr2"><img alt="Last commit" src="https://img.shields.io/github/last-commit/Master37373/MasterROM/sixteen-qpr2?style=for-the-badge&color=6b7280"/></a>
 </p>
+
+<h3 align="center">
+  <a href="https://sourceforge.net/projects/masterrom/files/y2s/">⬇️ Download</a>
+  &nbsp;·&nbsp;
+  <a href="CHANGELOG.md">📝 Changelog</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/Master37373/MasterROM-Updater">📲 Updater</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/Master37373/MasterROM/issues">🐞 Report a bug</a>
+</h3>
 
 > [!IMPORTANT]
 > **MasterROM is based on [ArtisanROM](https://github.com/ArtisanROM/ArtisanROM) by [Android Artisan](https://github.com/Android-Artisan)**,
@@ -25,31 +33,87 @@
 > to ArtisanROM. Fixes from ArtisanROM are taken over regularly.
 > If you like the ROM, please support the original projects.
 
-# What is MasterROM Opus?
-MasterROM Opus is a personal continuation of ArtisanROM Aether for the Galaxy S20+.
+## ✨ At a glance
 
-Like ArtisanROM, it's based on the latest iteration of Samsung's One UI and includes additional features and tweaks
-for the best possible experience out of the box. It uses the UN1CA build system, which automatically downloads and
-extracts the firmware, applies the required patches and generates a flashable zip for the target device.
+| | |
+|---|---|
+| **Device** | Galaxy S20+ (`y2s`, SM-G985F / SM-G986B) |
+| **Base** | Galaxy S24+ firmware · One UI 8.5 · Android 16 |
+| **Kernel** | ArtisanKRNL with MasterROM patches, KernelSU-Next |
+| **Updates** | Over the air with the MasterROM Updater, no root needed |
+| **Built on** | [ArtisanROM](https://github.com/ArtisanROM/ArtisanROM) → [UN1CA](https://github.com/salvogiangri/UN1CA) |
 
-## What MasterROM changes compared to ArtisanROM
-- **MasterROM Updater** – a new OTA app ([MasterROM-Updater](https://github.com/Master37373/MasterROM-Updater)):
-  downloads from several mirrors at once, resumes, checks MD5, shows the changelog, checks in the background
-  and installs updates **without root**
-- **SD card** – redesigned storage page in the One UI 8.5 glass look, switching between portable and internal storage,
-  Secure Folder handling, factory reset with an adopted SD card
-- **File-based encryption** fixes for the Exynos 990 (hardware inline encryption, SD card as internal storage)
-- ViPER4Android removed
+## 🧩 What MasterROM adds
 
-The full list is in [CHANGELOG.md](CHANGELOG.md).
+<table>
+<tr>
+<td width="50%" valign="top">
 
-# Features
-Everything below comes from ArtisanROM and UN1CA.
+**📲 MasterROM Updater**<br>
+Downloads from several mirrors at once, resumes, checks MD5, shows the changelog and installs ROM and kernel updates without root.
+
+</td>
+<td width="50%" valign="top">
+
+**💾 SD card as internal storage**<br>
+Redesigned SD card page in the One UI glass look, switching between portable and internal storage, protection against formatting from other apps.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+**🗣️ Hi Bixby &amp; Hey Google**<br>
+Voice wake-up with the screen off, fixed in the kernel.
+
+</td>
+<td valign="top">
+
+**🔋 Battery protection**<br>
+Basic, Adaptive and Maximum modes of One UI work on the S20+.
+
+</td>
+</tr>
+<tr>
+<td valign="top">
+
+**🎨 Galaxy S24+ look**<br>
+Boot animation, wallpapers and home screen layout of the Galaxy S24+.
+
+</td>
+<td valign="top">
+
+**🔒 Encryption fixes**<br>
+File-based encryption for the Exynos 990 with hardware inline encryption, factory reset from Settings works with TWRP.
+
+</td>
+</tr>
+</table>
+
+The full list of changes is in the [changelog](CHANGELOG.md).
+
+## 📦 Installation
+
+1. Unlock the bootloader and install **TWRP**
+2. Download the latest zip from [SourceForge](https://sourceforge.net/projects/masterrom/files/y2s/)
+3. Flash it in TWRP (or with `adb sideload`)
+4. Coming from another ROM: **Format Data**
+5. Later updates arrive through the **MasterROM Updater**
+
+> [!NOTE]
+> MasterROM is only built and tested for the Galaxy S20+. The other Exynos 990 devices are supported by
+> [ArtisanROM](https://github.com/ArtisanROM/ArtisanROM).
+
+## 🛠️ Features from ArtisanROM and UN1CA
+
+<details>
+<summary><b>Show all features</b></summary>
+<br>
 
 ### Core features:
 - Based on the latest stable Galaxy S24+ firmware
 - EROFS powered
-- Galaxy S26 wallpapers/sounds included
+- Galaxy S26 ringtones and sounds, Galaxy S24+ wallpapers
 - Galaxy AI support
   - Audio eraser
   - Browsing assist
@@ -105,54 +169,15 @@ Everything below comes from ArtisanROM and UN1CA.
 
 \* Requires a valid keybox
 
-# Supported devices
-| Device | Codename |
-|---|---|
-| Galaxy S20+ | y2s |
+</details>
 
-MasterROM is only built and tested for the Galaxy S20+. The other Exynos 990 devices are supported by
-[ArtisanROM](https://github.com/ArtisanROM/ArtisanROM).
+## 🏗️ Building
 
-# Installation
-1. Unlocked bootloader and TWRP
-2. Flash the MasterROM zip in TWRP (or `adb sideload`)
-3. When coming from another ROM: Format Data
-4. Later updates come through the MasterROM Updater
-
-# Building
 MasterROM is built with the UN1CA build system through GitHub Actions (`.github/workflows/build.yml`).
 See the [UN1CA documentation](https://github.com/salvogiangri/UN1CA) for local builds.
 
-# Licensing
-This project keeps the license of ArtisanROM and UN1CA: the [GNU General Public License v3.0](LICENSE).
-External dependencies might be distributed under a different license, such as:
-- [android-tools](https://github.com/nmeum/android-tools), licensed under the [Apache License 2.0](https://github.com/nmeum/android-tools/blob/master/LICENSE)
-- [apktool](https://github.com/iBotPeaches/Apktool), licensed under the [Apache License 2.0](https://github.com/iBotPeaches/Apktool/blob/master/LICENSE.md)
-- [erofs-utils](https://github.com/sekaiacg/erofs-utils/), dual license ([GPL-2.0](https://github.com/sekaiacg/erofs-utils/blob/dev/LICENSES/GPL-2.0), [Apache-2.0](https://github.com/sekaiacg/erofs-utils/blob/dev/LICENSES/Apache-2.0))
-- [img2sdat](https://github.com/xpirt/img2sdat), licensed under the [MIT License](https://github.com/xpirt/img2sdat/blob/master/LICENSE)
-- [platform_build](https://android.googlesource.com/platform/build/) (ext4_utils, f2fs_utils, signapk), licensed under the [Apache License 2.0](https://source.android.com/docs/setup/about/licenses)
+## 🙏 Credits
 
-# Disclaimer
-
-```cpp
-#include <std_disclaimer.h>
-
-/*
-* Your warranty is now void.
-*
-* I am not responsible for bricked devices, dead SD cards,
-* thermonuclear war, or you getting fired because the alarm app failed. Please
-* do some research if you have any concerns about doing this to your device
-* YOU are choosing to make these modifications, and if
-* you point the finger at me for messing up your device, I will laugh at you.
-*
-* I am also not responsible for you getting in trouble for using any of the
-* features in this ROM, including but not limited to Call Recording, secure
-* flag removal etc.
-*/
-```
-
-# Contributors
 MasterROM is built on the work of everyone who contributed to ArtisanROM and UN1CA:
 
 **ArtisanROM**
@@ -163,7 +188,10 @@ MasterROM is built on the work of everyone who contributed to ArtisanROM and UN1
 
 <a href="https://github.com/salvogiangri/UN1CA/graphs/contributors"><img loading="lazy" src="https://contrib.rocks/image?repo=salvogiangri/UN1CA"/></a>
 
-# Credits
+<details>
+<summary><b>Full credits</b></summary>
+<br>
+
 - **[Android Artisan](https://github.com/Android-Artisan)** for creating ArtisanROM and ArtisanKRNL, the base of MasterROM
 
 ## Original ArtisanROM credits:
@@ -196,6 +224,45 @@ A special thanks goes to the following for their invaluable contributions in no 
 - **Samsung** for One UI and the kernel sources, and the **AOSP** project
 - Everyone who tests MasterROM and reports bugs
 
-# ArtisanROM Archive
+**ArtisanROM Archive**
+
 - [ArtisanROM Archive Org](https://github.com/ArtisanROM-archive)
 - [Old Sixteen branch](https://github.com/ArtisanROM-archive/ArtisanROM_old)
+
+</details>
+
+## 📄 Licensing
+
+<details>
+<summary><b>GNU General Public License v3.0 and dependencies</b></summary>
+<br>
+
+This project keeps the license of ArtisanROM and UN1CA: the [GNU General Public License v3.0](LICENSE).
+External dependencies might be distributed under a different license, such as:
+- [android-tools](https://github.com/nmeum/android-tools), licensed under the [Apache License 2.0](https://github.com/nmeum/android-tools/blob/master/LICENSE)
+- [apktool](https://github.com/iBotPeaches/Apktool), licensed under the [Apache License 2.0](https://github.com/iBotPeaches/Apktool/blob/master/LICENSE.md)
+- [erofs-utils](https://github.com/sekaiacg/erofs-utils/), dual license ([GPL-2.0](https://github.com/sekaiacg/erofs-utils/blob/dev/LICENSES/GPL-2.0), [Apache-2.0](https://github.com/sekaiacg/erofs-utils/blob/dev/LICENSES/Apache-2.0))
+- [img2sdat](https://github.com/xpirt/img2sdat), licensed under the [MIT License](https://github.com/xpirt/img2sdat/blob/master/LICENSE)
+- [platform_build](https://android.googlesource.com/platform/build/) (ext4_utils, f2fs_utils, signapk), licensed under the [Apache License 2.0](https://source.android.com/docs/setup/about/licenses)
+
+</details>
+
+## ⚠️ Disclaimer
+
+```cpp
+#include <std_disclaimer.h>
+
+/*
+* Your warranty is now void.
+*
+* I am not responsible for bricked devices, dead SD cards,
+* thermonuclear war, or you getting fired because the alarm app failed. Please
+* do some research if you have any concerns about doing this to your device
+* YOU are choosing to make these modifications, and if
+* you point the finger at me for messing up your device, I will laugh at you.
+*
+* I am also not responsible for you getting in trouble for using any of the
+* features in this ROM, including but not limited to Call Recording, secure
+* flag removal etc.
+*/
+```
