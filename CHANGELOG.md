@@ -3,7 +3,7 @@
 - Battery protection: Adaptive and Maximum modes now work (new kernel)
 - Home screen layout of the Galaxy S24+ on a clean install: Gemini, Google Messages in the dock, Microsoft OneDrive
 - Microsoft OneDrive stays preinstalled
-- Stock Samsung boot animation
+- Boot and shutdown animation of the Galaxy S24+ (Powered by Android)
 - Software information: Samsung banner instead of the custom logo
 - Wallpapers of the Galaxy S24+
 - Setup: stock Samsung welcome screens, recommended apps are still offered

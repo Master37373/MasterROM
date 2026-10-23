@@ -51,9 +51,13 @@ if [ -f "$WORK_DIR/system/system/lib64/extractors/libsdsfextractor.so" ] && \
     DELETE_FROM_WORK_DIR "system" "system/lib64/extractors/libsdsfextractor.so"
 fi
 
-ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/media/bootsamsung.qmg" 0 0 644 "u:object_r:system_file:s0"
-ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/media/bootsamsungloop.qmg" 0 0 644 "u:object_r:system_file:s0"
-ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/media/shutdown.qmg" 0 0 644 "u:object_r:system_file:s0"
+# MasterROM (y2s): keep the boot/shutdown animation of the source firmware (Galaxy S24+,
+# with "Powered by Android") instead of the one of the S20+.
+if [[ "$TARGET_CODENAME" != "y2s" ]]; then
+    ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/media/bootsamsung.qmg" 0 0 644 "u:object_r:system_file:s0"
+    ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/media/bootsamsungloop.qmg" 0 0 644 "u:object_r:system_file:s0"
+    ADD_TO_WORK_DIR "$TARGET_FIRMWARE" "system" "system/media/shutdown.qmg" 0 0 644 "u:object_r:system_file:s0"
+fi
 
 if [ -f "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/priv-app/SohService/SohService.apk" ]; then
     DECODE_APK "system" "system/priv-app/SohService/SohService.apk"
