@@ -19,6 +19,8 @@
   &nbsp;·&nbsp;
   <a href="https://github.com/Master37373/MasterROM-Updater">📲 Updater</a>
   &nbsp;·&nbsp;
+  <a href="https://github.com/Master37373/MasterROM/wiki">📖 Wiki</a>
+  &nbsp;·&nbsp;
   <a href="https://github.com/Master37373/MasterROM/issues">🐞 Report a bug</a>
 </h3>
 
@@ -94,7 +96,7 @@ The full list of changes is in the [changelog](CHANGELOG.md).
 
 ## 📦 Installation
 
-1. Unlock the bootloader and install **TWRP**
+1. Unlock the bootloader and install **TWRP** ([guides in the wiki](https://github.com/Master37373/MasterROM/wiki))
 2. Download the latest zip from [SourceForge](https://sourceforge.net/projects/masterrom/files/y2s/)
 3. Flash it in TWRP (or with `adb sideload`)
 4. Coming from another ROM: **Format Data**
