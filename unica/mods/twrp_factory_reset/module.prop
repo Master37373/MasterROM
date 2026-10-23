@@ -1,0 +1,4 @@
+id=twrp_factory_reset
+name=Factory reset with TWRP
+author=Master37373
+description=Lets "Reset to factory data" in Settings work when TWRP is installed.

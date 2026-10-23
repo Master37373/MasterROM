@@ -11,6 +11,7 @@
 - SD card: the "moving data" notification opens the SD card page
 - SD card: other apps (e.g. My Files) can no longer format an SD card used as internal storage, they open the SD card page instead
 - USB debugging is off by default and asks for authorization again, like on stock Samsung
+- Factory data reset in Settings now works with TWRP installed
 
 # 1.0.2
 - MasterROM Updater 1.0.2 built in: automatic download, install tonight, install your own ZIP

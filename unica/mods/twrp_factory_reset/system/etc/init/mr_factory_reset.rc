@@ -1,0 +1,8 @@
+service mr_factory_reset /system/bin/mr_factory_reset.sh
+    user root
+    group root cache
+    disabled
+    oneshot
+
+on property:sys.shutdown.requested=1recovery
+    start mr_factory_reset
