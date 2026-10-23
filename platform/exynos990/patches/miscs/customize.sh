@@ -300,15 +300,13 @@ F="$(find "$SVC" -path '*/com/android/server/StorageManagerService.smali' | head
 [ -n "$F" ] || ABORT "StorageManagerService.smali not found"
 for M in 'format(Ljava/lang/String;)V' 'partitionPublic(Ljava/lang/String;)V' \
          'partitionPrivate(Ljava/lang/String;)V' 'partitionMixed(Ljava/lang/String;I)V'; do
-    if ! grep -A3 -F ".method public $M" "$F" | grep -q 'AdoptedSdGuard;->check'; then
-        M="$M" perl -0pi -e 's/(\.method public (?:final )?\Q$ENV{M}\E\n\s*\.locals \d+\n)/$1\n    invoke-static {p1}, Lcom\/masterrom\/storageguard\/AdoptedSdGuard;->check(Ljava\/lang\/String;)V\n/' "$F"
-    fi
-    if grep -A3 -F ".method public $M" "$F" | grep -q 'AdoptedSdGuard;->check'; then
+    # any modifiers (public final ...), hook after the first .locals/.registers of the method
+    M="$M" perl -0pi -e 's/(\.method [^\n]*?\b\Q$ENV{M}\E\n(?:(?!\.end method)[^\n]*\n)*?\s*\.(?:locals|registers) \d+\n)(?!\n    invoke-static \{p1\}, Lcom\/masterrom\/storageguard)/$1\n    invoke-static {p1}, Lcom\/masterrom\/storageguard\/AdoptedSdGuard;->check(Ljava\/lang\/String;)V\n/' "$F"
+    if M="$M" perl -0ne 'exit(/\.method [^\n]*?\b\Q$ENV{M}\E\n(?:(?!\.end method)[^\n]*\n)*?\s*invoke-static \{p1\}, Lcom\/masterrom\/storageguard\/AdoptedSdGuard;->check/ ? 0 : 1)' "$F"; then
         LOG "- StorageManagerService.$M: SD card guard added"
-    elif [[ "$M" == partitionPublic* ]] || [[ "$M" == format* ]]; then
-        ABORT "Failed to add the SD card guard to StorageManagerService.$M"
     else
-        LOGW "StorageManagerService.$M not found, SD card guard skipped there"
+        LOGW "StorageManagerService.$M: SD card guard NOT added, method headers found:"
+        grep -n -F "${M%%(*}(" "$F" | grep '\.method' | head -5 | while IFS= read -r L; do LOGW "    $L"; done
     fi
 done
 unset SVC F M N
