@@ -7,7 +7,7 @@
 - Software information: Samsung banner instead of the custom logo
 - Wallpapers of the Galaxy S24+
 - Setup: stock Samsung welcome screens, recommended apps are still offered
-- Volume: system, lock screen, screenshot and keyboard sounds are quieter at low steps; ringtone, notifications and alarm are louder at low steps
+- Volume: system, lock screen, screenshot and keyboard sounds are quieter at low steps; notifications and alarm are louder at low steps
 - SD card: the "moving data" notification opens the SD card page
 - SD card: other apps (e.g. My Files) can no longer format an SD card used as internal storage, they open the SD card page instead
 - USB debugging is off by default and asks for authorization again, like on stock Samsung
