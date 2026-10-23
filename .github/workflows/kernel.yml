@@ -115,7 +115,11 @@ jobs:
           # bumps, no very short / meaningless messages, no duplicates, at most 8
           git -C "$KDIR" log -40 --no-merges --format='%s' \
             | grep -viE '(^|: *)(bump|update|wip|test|fix|fixup|cleanup|i give up|oops|revert "?(bump|wip))\b *\.?$|^.{0,11}$' \
-            | awk '!seen[tolower($0)]++' | head -n 8 > "$RUNNER_TEMP/changes.txt" || true
+            | awk '!seen[tolower($0)]++' | head -n 8 > "$RUNNER_TEMP/upstream.txt" || true
+          # MasterROM's own kernel patches (artisankrnl/CHANGES) come first: they do not show up
+          # in the ArtisanKRNL commit log. Together at most 10 entries.
+          { grep -v '^\s*\(#\|$\)' platform/exynos990/patches/artisankrnl/CHANGES 2>/dev/null || true
+            cat "$RUNNER_TEMP/upstream.txt"; } | awk '!seen[tolower($0)]++' | head -n 10 > "$RUNNER_TEMP/changes.txt"
           cat "$RUNNER_TEMP/changes.txt"
 
       - name: Sign images with AVB (like the ROM build)

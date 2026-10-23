@@ -1,3 +1,16 @@
+# 1.0.3
+- Hi Bixby and Hey Google now work with the screen off (new kernel)
+- Battery protection: Adaptive and Maximum modes now work (new kernel)
+- Home screen layout of the Galaxy S24+ on a clean install: Gemini, Google Messages in the dock, Microsoft OneDrive
+- Microsoft OneDrive stays preinstalled
+- Stock Samsung boot animation
+- Software information: Samsung banner instead of the custom logo
+- Wallpapers of the Galaxy S24+
+- Setup: stock Samsung welcome screens, recommended apps are still offered
+- Quieter system sounds at low volume steps
+- SD card: the "moving data" notification opens the SD card page
+- SD card: other apps (e.g. My Files) can no longer format an SD card used as internal storage, they open the SD card page instead
+
 # 1.0.2
 - MasterROM Updater 1.0.2 built in: automatic download, install tonight, install your own ZIP
 - New MasterROM logo and banner
