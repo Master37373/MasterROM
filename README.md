@@ -249,6 +249,9 @@ External dependencies might be distributed under a different license, such as:
 
 </details>
 
+> [!NOTE]
+> 🤖 This README, its banner and the wiki pages were created with the help of AI (Claude by Anthropic). Parts of the ROM changes were also developed with AI assistance.
+
 ## ⚠️ Disclaimer
 
 ```cpp
