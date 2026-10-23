@@ -1,0 +1,68 @@
+diff --git a/sound/soc/samsung/vts/vts_dma.c b/sound/soc/samsung/vts/vts_dma.c
+index 596a603..0fc19ef 100644
+--- a/sound/soc/samsung/vts/vts_dma.c
++++ b/sound/soc/samsung/vts/vts_dma.c
+@@ -22,6 +22,7 @@
+ #include <linux/delay.h>
+ #include <linux/regmap.h>
+ #include <linux/wakelock.h>
++#include <linux/uaccess.h>
+ 
+ #include <asm-generic/delay.h>
+ 
+@@ -167,6 +168,46 @@ static snd_pcm_uframes_t vts_platform_pointer(struct snd_pcm_substream *substrea
+ 	return bytes_to_frames(runtime, data->pointer);
+ }
+ 
++/*
++ * MasterROM: the VTS firmware writes the voice trigger backlog (the audio
++ * containing the keyword) into the shared DRAM buffer right after a trigger,
++ * before userspace opens this PCM. Newer 4.19 stable kernels make snd_pcm_hw_params()
++ * clears runtime->dma_area unless the driver provides its own copy_user op
++ * ("ALSA: pcm: Clear the buffer at hw_params for avoiding info leaks"), which
++ * wiped the backlog whenever Bixby / Google opened the stream more than a few
++ * milliseconds after the trigger: the keyword arrived as pure silence and the
++ * second stage verification always failed (VERIFY_SOUND_VERY_LOW).
++ * Providing copy ops keeps the buffer intact; they do what the ALSA defaults do.
++ * The buffer only ever holds microphone audio, so nothing leaks.
++ */
++static int vts_platform_copy_user(struct snd_pcm_substream *substream,
++		int channel, unsigned long pos, void __user *buf,
++		unsigned long bytes)
++{
++	struct snd_pcm_runtime *runtime = substream->runtime;
++
++	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK) {
++		if (copy_from_user(runtime->dma_area + pos, buf, bytes))
++			return -EFAULT;
++	} else {
++		if (copy_to_user(buf, runtime->dma_area + pos, bytes))
++			return -EFAULT;
++	}
++	return 0;
++}
++
++static int vts_platform_copy_kernel(struct snd_pcm_substream *substream,
++		int channel, unsigned long pos, void *buf, unsigned long bytes)
++{
++	struct snd_pcm_runtime *runtime = substream->runtime;
++
++	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
++		memcpy(runtime->dma_area + pos, buf, bytes);
++	else
++		memcpy(buf, runtime->dma_area + pos, bytes);
++	return 0;
++}
++
+ static int vts_platform_open(struct snd_pcm_substream *substream)
+ {
+ 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+@@ -257,6 +298,8 @@ static struct snd_pcm_ops vts_platform_ops = {
+ 	.prepare	= vts_platform_prepare,
+ 	.trigger	= vts_platform_trigger,
+ 	.pointer	= vts_platform_pointer,
++	.copy_user	= vts_platform_copy_user,
++	.copy_kernel	= vts_platform_copy_kernel,
+ 	.mmap		= vts_platform_mmap,
+ };
+ 
