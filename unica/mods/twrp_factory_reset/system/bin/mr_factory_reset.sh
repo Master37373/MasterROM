@@ -10,6 +10,7 @@
 # Started by init when a reboot to recovery begins (sys.shutdown.requested=1recovery);
 # One UI has written the command file at that point. Normal reboots to recovery
 # (no --wipe_data) and pending update scripts are left alone.
+# Runs as user system: the command file is system:system 0600, /cache/recovery is system:cache 0770.
 
 CMD=/cache/recovery/command
 ORS=/cache/recovery/openrecoveryscript
