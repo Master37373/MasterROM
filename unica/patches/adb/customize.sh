@@ -1,3 +1,17 @@
+# Enable klogd daemon
+# https://android.googlesource.com/platform/system/logging/+/refs/tags/android-16.0.0_r2/logd/main.cpp#214
+SET_PROP "system" "ro.logd.kernel" "true"
+
+# Do not filter out Samsung processes in logs
+SET_PROP_IF_DIFF "system" "persist.log.semlevel" "0xFFFFFFFF"
+
+# MasterROM: USB debugging stays off and asks for authorization (stock Samsung, like the
+# Galaxy S24+). Only debug builds (make_rom.sh --debug) start adbd on boot without asking.
+if ! $DEBUG; then
+    LOG "- Not a debug build: USB debugging off by default, authorization required"
+    return 0
+fi
+
 # Start adbd on boot
 # https://android.googlesource.com/platform/packages/modules/adb/+/refs/heads/main/docs/dev/how_adbd_starts.md
 SET_PROP_IF_DIFF "product" "persist.sys.usb.config" "$(GET_PROP "product" "persist.sys.usb.config"),adb"
@@ -11,13 +25,6 @@ SET_PROP_IF_DIFF "vendor_dlkm" "persist.sys.usb.config" "$(GET_PROP "vendor_dlkm
 # https://android.googlesource.com/platform/packages/modules/adb/+/refs/tags/android-15.0.0_r1/daemon/main.cpp#213
 SET_PROP_IF_DIFF "system" "ro.adb.secure" "0"
 SET_PROP_IF_DIFF "vendor" "ro.adb.secure" "0"
-
-# Enable klogd daemon
-# https://android.googlesource.com/platform/system/logging/+/refs/tags/android-16.0.0_r2/logd/main.cpp#214
-SET_PROP "system" "ro.logd.kernel" "true"
-
-# Do not filter out Samsung processes in logs
-SET_PROP_IF_DIFF "system" "persist.log.semlevel" "0xFFFFFFFF"
 
 if [ -f "$WORK_DIR/system/system/etc/init/hw/init.usb.rc" ]; then
     if ! grep -q "persist.vendor.radio.port_index" "$WORK_DIR/system/system/etc/init/hw/init.usb.rc"; then
