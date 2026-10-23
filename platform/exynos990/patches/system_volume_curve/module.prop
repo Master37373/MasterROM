@@ -1,4 +1,4 @@
 id=system_volume_curve
 name=System sound volume curve
 author=MasterROM
-description=Steeper speaker volume curve for system sounds, so the lowest steps are actually quiet.
+description=Speaker volume tuning: quieter low steps for system, lock screen and keyboard tones; louder low steps for ringtone, notification and alarm.
