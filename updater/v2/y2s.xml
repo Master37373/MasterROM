@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <roms>
   <rom channel="stable">
-    <version>1.0.2</version>
-    <date>2026-10-17</date>
-    <filename>MasterROM_OFFICIAL_1.0.2_20261017_y2s-sign.zip</filename>
-    <part1>https://sourceforge.net/projects/masterrom/files/y2s/MasterROM_OFFICIAL_1.0.2_20261017_y2s-sign.zip/download</part1>
-    <md5>35278da2f06d9857a6c56ed86cba5ab9</md5>
-    <size>7100888635</size>
+    <version>1.0.3</version>
+    <date>2026-10-24</date>
+    <filename>MasterROM_OFFICIAL_1.0.3_20261024_y2s-sign.zip</filename>
+    <part1>https://sourceforge.net/projects/masterrom/files/y2s/MasterROM_OFFICIAL_1.0.3_20261024_y2s-sign.zip/download</part1>
+    <md5>6c6a5230856ef6395b5b9f63f055b6a0</md5>
+    <size>7362754847</size>
   </rom>
   <kernel channel="stable">
     <version>ArtisanKRNL-v5.0.0-mr0.3</version>
