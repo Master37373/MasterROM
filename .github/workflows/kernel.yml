@@ -9,8 +9,10 @@ name: Kernel
 # (or patch_rev was raised) since the kernel in y2s.xml.
 
 on:
-  schedule:
-    - cron: '17 3 * * *'
+  # Nightly auto-publish paused while the KernelSU-Next update and SuSFS are being tested
+  # on the device. Put the schedule back afterwards.
+  # schedule:
+  #   - cron: '17 3 * * *'
   workflow_dispatch:
     inputs:
       publish:
@@ -185,6 +187,28 @@ jobs:
         with:
           name: ${{ steps.ver.outputs.file }}
           path: out/${{ steps.ver.outputs.file }}
+
+      - name: SuSFS module (ksu_susfs tool built from the same SuSFS version as the kernel)
+        continue-on-error: true
+        run: |
+          # The kernel carries SuSFS v2.2.0; the tool and the module must match it (same command
+          # numbers and structs), so both come from the v2.2.0 commit of susfs4ksu.
+          SUSFS_COMMIT=d4c3914
+          S="$RUNNER_TEMP/susfs4ksu"
+          git clone -q --filter=blob:none --branch gki-android12-5.10 https://gitlab.com/simonpunk/susfs4ksu.git "$S"
+          git -C "$S" checkout -q "$SUSFS_COMMIT"
+          NDK="${ANDROID_NDK_LATEST_HOME:-$ANDROID_NDK_HOME}"
+          (cd "$S/ksu_susfs" && "$NDK/ndk-build" -s)
+          cp "$S/ksu_susfs/libs/arm64-v8a/ksu_susfs" "$S/ksu_module_susfs/tools/ksu_susfs_arm64"
+          (cd "$S/ksu_module_susfs" && zip -r -q "$GITHUB_WORKSPACE/out/susfs4ksu-v2.2.0.zip" .)
+          ls -l out/susfs4ksu-v2.2.0.zip
+
+      - name: Upload SuSFS module (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: susfs4ksu-v2.2.0.zip
+          path: out/susfs4ksu-v2.2.0.zip
+          if-no-files-found: ignore
 
       - name: Upload to SourceForge (+ updater XML)
         env:
