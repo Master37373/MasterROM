@@ -2,8 +2,11 @@
 EXTREMEKRNL_REPO="https://github.com/Android-Artisan/android_kernel_samsung_exynos990"
 # KernelSU-Next driver (legacy branch, for non-GKI 4.19 with manual hooks). ArtisanKRNL pins an
 # older commit as a submodule; MasterROM moves it to this one. Raise patch_rev when changing it.
+# Pinned to 465490a2 (v3.4.0-legacy-20): the commits after it raise the kernel UAPI to 6 (module
+# preinit, which this kernel build cannot use anyway) and the released manager app v3.4.2 only
+# speaks UAPI 5 ("manager version 5 is too low"). Move on once a manager with UAPI 6 is released.
 KSUN_REPO="https://github.com/KernelSU-Next/KernelSU-Next"
-KSUN_COMMIT="b933b1f728116a456fbebf27b6a8772a640cdf23"
+KSUN_COMMIT="465490a26667ba4cf00b3be975a7e28e53978829"
 
 BUILD_KERNEL()
 {
