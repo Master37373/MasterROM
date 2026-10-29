@@ -73,13 +73,7 @@ public final class GlassStyler {
             callQuiet(list, "seslSetFadingEdgeEnabled", new Class[] { boolean.class }, false);
 
             // 3) everything between the list and the window is made transparent
-            View top = w.getDecorView();
-            // (stops below the decor view: its background IS the window background from step 1)
-            for (ViewParent p = list.getParent(); p instanceof View && p != top; p = p.getParent()) {
-                clear((View) p);
-            }
-            clearAppBar(top, activity);
-            hideById(top, activity, "round_corner");
+            clearChrome(list, activity);
 
             // 4) the cards are drawn by the list background, in the updater's glass colors
             if (!(list.getBackground() instanceof CardsDrawable)) {
@@ -89,9 +83,11 @@ public final class GlassStyler {
                 final ViewGroup l = list;
                 final boolean dk = dark;
                 final float dd = d;
+                final Activity act = activity;
                 list.setTag(KEY, Boolean.TRUE);
                 list.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
                     @Override public boolean onPreDraw() {
+                        clearParentFills(l, act);
                         noSidePaddingFill(l);
                         styleChildren(l, dk, dd);
                         return true;
@@ -239,6 +235,32 @@ public final class GlassStyler {
 
     private static void clear(View v) {
         v.setBackground(null);
+    }
+
+    /**
+     * Removes the chrome backgrounds between the list and the window, so the page gradient shows
+     * instead. Samsung re-applies some of these (notably the "container_material" solid fill that
+     * otherwise peeks out as black square corners behind the rounded cards), so this is called on
+     * every frame from the pre-draw listener, not just once.
+     */
+    static void clearChrome(ViewGroup list, Activity activity) {
+        clearParentFills(list, activity);
+        View top = activity.getWindow().getDecorView();
+        clearAppBar(top, activity);
+        hideById(top, activity, "round_corner");
+    }
+
+    /**
+     * Nulls the backgrounds of the views between the list and the decor view. setBackground(null)
+     * is a no-op when the background is already null, so this is safe to run every frame: it only
+     * does real work (and invalidates) when Samsung has re-applied one, e.g. the container_material
+     * solid fill that otherwise shows as black square corners behind the rounded cards.
+     */
+    static void clearParentFills(ViewGroup list, Activity activity) {
+        View top = activity.getWindow().getDecorView();
+        for (ViewParent p = list.getParent(); p instanceof View && p != top; p = p.getParent()) {
+            clear((View) p);
+        }
     }
 
     private static void clearAppBar(View top, Context c) {
