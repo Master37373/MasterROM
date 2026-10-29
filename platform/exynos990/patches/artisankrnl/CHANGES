@@ -1,6 +1,6 @@
 # MasterROM kernel changes, shown first in the updater ("what's new" of the kernel).
 # One line per change. Update this file together with patch_rev.
 SuSFS root hiding enabled, with the current upstream fixes (needs the SuSFS module)
-KernelSU-Next driver updated (legacy v3.4.0-legacy-24)
+KernelSU-Next driver updated (legacy v3.4.0-legacy-20, matches the KernelSU-Next app v3.4.2)
 Hi Bixby and Hey Google now work with the screen off
 Battery protection: Adaptive and Maximum modes work
