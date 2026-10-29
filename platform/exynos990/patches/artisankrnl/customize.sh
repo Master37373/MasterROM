@@ -71,6 +71,9 @@ APPLY_SEPOLICY_FIX()
     # KernelSU-Next legacy has no SuSFS support, so CONFIG_KSU_SUSFS had no Kconfig entry and was
     # dropped. This adds the KernelSU half: Kconfig, ksu_susfs tool commands, SIDs, umounted-app marking.
     APPLY_PATCH_ONCE "$KERNEL_TMP_DIR/KernelSU-Next" "$PATCH_DIR/kernelsu-susfs.patch" "kernelsu-susfs.patch"
+    # SuSFS fixes from upstream susfs4ksu (v2.3.x) for the in-tree v2.2.0: kstat ctime flag and is_statically
+    # type (ABI of the current ksu_susfs tool), NULL deref, leaks, SRCU/seqlock and use-after-dput fixes
+    APPLY_PATCH_ONCE "$KERNEL_TMP_DIR"               "$PATCH_DIR/susfs-fixes.patch" "susfs-fixes.patch"
     # FBE (software crypto): f2fs_submit_page_write dereferenced bio_page->mapping, which is NULL for fscrypt bounce pages
     APPLY_PATCH_ONCE "$KERNEL_TMP_DIR"               "$PATCH_DIR/f2fs-bounce-page-inode.patch" "f2fs-bounce-page-inode.patch"
     # Adoptable storage: Android vold always passes "allow_encrypt_override" to dm-crypt
