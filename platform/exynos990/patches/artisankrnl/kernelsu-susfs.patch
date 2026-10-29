@@ -99,10 +99,10 @@ index 946966dc..fee1e70f 100644
 +
  endmenu
 diff --git a/kernel/core/init.c b/kernel/core/init.c
-index e6562de1..582e2ecf 100644
+index 9be09872..567a9715 100644
 --- a/kernel/core/init.c
 +++ b/kernel/core/init.c
-@@ -24,6 +24,9 @@
+@@ -23,6 +23,9 @@
  #include "feature/selinux_hide.h"
  #include "feature/shell_su_adb_only.h"
  #include "feature/adb_root.h"
@@ -112,7 +112,7 @@ index e6562de1..582e2ecf 100644
  
  extern void __init ksu_lsm_hook_init(void);
  extern int ksu_handle_execveat_sucompat(int *fd, struct filename **filename_ptr,
-@@ -134,6 +137,10 @@ int __init kernelsu_init(void)
+@@ -133,6 +136,10 @@ int __init kernelsu_init(void)
          return -ENOSYS;
      }
  
@@ -173,6 +173,31 @@ index 3dddf937..364ef323 100644
      // Handle kernel umount
      ksu_handle_umount(old_uid, new_uid);
  
+diff --git a/kernel/manager/pkg_observer.c b/kernel/manager/pkg_observer.c
+index ac385a49..43a47e89 100644
+--- a/kernel/manager/pkg_observer.c
++++ b/kernel/manager/pkg_observer.c
+@@ -12,6 +12,9 @@
+ #include "throne_tracker.h"
+ #include "runtime/ksud_boot.h"
+ #include "compat/kernel_compat.h" // TWA_RESUME on < 5.7
++#ifdef CONFIG_KSU_SUSFS
++#include <linux/susfs.h>
++#endif
+ 
+ #define MASK_SYSTEM (FS_CREATE | FS_MOVE | FS_EVENT_ON_CHILD)
+ #define MASK_ADB (FS_CLOSE_WRITE | FS_MOVE | FS_DELETE | FS_EVENT_ON_CHILD)
+@@ -42,6 +45,10 @@ static void ksu_track_throne_tw_func(struct callback_head *cb)
+ 	if (current->flags & PF_EXITING)
+ 		return;
+ 	track_throne(false);
++#ifdef CONFIG_KSU_SUSFS
++	// SuSFS: the uid of an app changes when it is reinstalled, resolve the priority uid filter again
++	susfs_parse_priority_app_strings();
++#endif
+ }
+ 
+ static void ksu_defer_track_throne(void)
 diff --git a/kernel/runtime/boot_event.c b/kernel/runtime/boot_event.c
 index ee7c88a2..4818331a 100644
 --- a/kernel/runtime/boot_event.c
@@ -244,7 +269,7 @@ index 258ca819..d784fd6e 100644
  
  /*
 diff --git a/kernel/supercall/supercall.c b/kernel/supercall/supercall.c
-index 9c7ac7bb..0fda86a2 100644
+index 9c7ac7bb..acf151a1 100644
 --- a/kernel/supercall/supercall.c
 +++ b/kernel/supercall/supercall.c
 @@ -21,6 +21,9 @@
@@ -257,7 +282,7 @@ index 9c7ac7bb..0fda86a2 100644
  
  uint32_t ksuver_override = 0;
  
-@@ -126,6 +129,77 @@ int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd,
+@@ -126,6 +129,80 @@ int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd,
  	if (magic1 != KSU_INSTALL_MAGIC1)
  		return 0;
  
@@ -314,6 +339,9 @@ index 9c7ac7bb..0fda86a2 100644
 +			susfs_add_sus_map(arg);
 +			return 0;
 +#endif
++		case CMD_SUSFS_SET_PRIORITY_UID_FILTER:
++			susfs_set_priority_uid_filter(arg);
++			return 0;
 +		case CMD_SUSFS_ENABLE_AVC_LOG_SPOOFING:
 +			susfs_set_avc_log_spoofing(arg);
 +			return 0;
